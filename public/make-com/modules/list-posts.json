@@ -1,0 +1,96 @@
+{
+  "name": "listPosts",
+  "label": "List Posts",
+  "description": "Retrieve a list of your posts with optional filters.",
+  "actionType": "search",
+  "communication": {
+    "url": "{{baseUrl}}/api/v1/posts",
+    "method": "GET",
+    "headers": {
+      "x-api-key": "{{connection.apiKey}}"
+    },
+    "qs": {
+      "limit": "{{parameters.limit}}",
+      "status": "{{parameters.statusFilter}}",
+      "platform": "{{parameters.platformFilter}}",
+      "account_id": "{{parameters.accountFilter}}",
+      "date_from": "{{parameters.dateFrom}}",
+      "date_to": "{{parameters.dateTo}}"
+    },
+    "response": {
+      "output": "{{body.posts}}"
+    }
+  },
+  "parameters": [
+    {
+      "name": "limit",
+      "type": "number",
+      "label": "Limit",
+      "required": false,
+      "default": 20,
+      "help": "Number of posts to return (1–100)."
+    },
+    {
+      "name": "statusFilter",
+      "type": "select",
+      "label": "Status Filter",
+      "required": false,
+      "options": [
+        { "label": "All", "value": "" },
+        { "label": "Pending", "value": "pending" },
+        { "label": "Processing", "value": "processing" },
+        { "label": "Completed", "value": "completed" },
+        { "label": "Failed", "value": "failed" },
+        { "label": "Scheduled", "value": "scheduled" }
+      ]
+    },
+    {
+      "name": "platformFilter",
+      "type": "select",
+      "label": "Platform Filter",
+      "required": false,
+      "options": [
+        { "label": "All", "value": "" },
+        { "label": "Facebook", "value": "facebook" },
+        { "label": "Instagram", "value": "instagram" },
+        { "label": "TikTok", "value": "tiktok" },
+        { "label": "YouTube", "value": "youtube" },
+        { "label": "LinkedIn", "value": "linkedin" },
+        { "label": "X / Twitter", "value": "twitter" },
+        { "label": "Pinterest", "value": "pinterest" },
+        { "label": "Threads", "value": "threads" },
+        { "label": "Bluesky", "value": "bluesky" },
+        { "label": "Reddit", "value": "reddit" }
+      ]
+    },
+    {
+      "name": "accountFilter",
+      "type": "text",
+      "label": "Account ID Filter",
+      "required": false,
+      "help": "Filter posts by a specific social account UUID."
+    },
+    {
+      "name": "dateFrom",
+      "type": "date",
+      "label": "Date From",
+      "required": false,
+      "help": "Filter posts created on or after this date."
+    },
+    {
+      "name": "dateTo",
+      "type": "date",
+      "label": "Date To",
+      "required": false,
+      "help": "Filter posts created on or before this date."
+    }
+  ],
+  "interface": [
+    { "name": "id", "type": "text" },
+    { "name": "caption", "type": "text" },
+    { "name": "status", "type": "text" },
+    { "name": "platforms", "type": "array", "spec": { "type": "text" } },
+    { "name": "scheduled_at", "type": "date" },
+    { "name": "created_at", "type": "date" }
+  ]
+}

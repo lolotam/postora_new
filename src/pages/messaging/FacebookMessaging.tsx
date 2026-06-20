@@ -1,0 +1,61 @@
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { MessagingInbox } from "@/components/messaging/MessagingInbox";
+import { Facebook, Inbox, MessageCircle } from "lucide-react";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { Navigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CommentManagerPanel } from "@/components/comments/CommentManagerPanel";
+import { Icon3D, GradientHeading, GradientRingCard, GradientDivider, Reveal } from "@/components/fx";
+
+export default function FacebookMessaging() {
+  const { flags, isLoading } = useFeatureFlags();
+
+  if (!isLoading && !flags.msgFacebook) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <Reveal>
+          <div className="group flex items-center gap-4">
+            <Icon3D icon={Facebook} variant="sky" size="md" />
+            <div className="flex-1 min-w-0">
+              <GradientHeading preset="sky-violet" size="lg" as="h1">Facebook Messenger</GradientHeading>
+              <p className="text-sm text-muted-foreground mt-1">Manage your Facebook Messenger conversations</p>
+            </div>
+          </div>
+        </Reveal>
+        <GradientDivider tone="sky" />
+        <Reveal delay={80}>
+          <Tabs defaultValue="inbox" className="w-full">
+            <TabsList className="bg-card/50 backdrop-blur-md border border-border/40 rounded-xl p-1 h-auto [&>[data-state=active]]:bg-gradient-to-r [&>[data-state=active]]:from-sky-500 [&>[data-state=active]]:via-blue-500 [&>[data-state=active]]:to-indigo-500 [&>[data-state=active]]:text-white [&>[data-state=active]]:shadow-md">
+              <TabsTrigger value="inbox" className="gap-1.5 rounded-lg">
+                <Inbox className="w-4 h-4" />
+                Inbox
+              </TabsTrigger>
+              {flags.commentManager && (
+                <TabsTrigger value="comments" className="gap-1.5 rounded-lg">
+                  <MessageCircle className="w-4 h-4" />
+                  Comment Manager
+                </TabsTrigger>
+              )}
+            </TabsList>
+            <TabsContent value="inbox" className="mt-4">
+              <GradientRingCard variant="sky" padded={false} hoverLift={false} ringIntensity="subtle" innerClassName="p-4 md:p-5">
+                <MessagingInbox platform="facebook" />
+              </GradientRingCard>
+            </TabsContent>
+            {flags.commentManager && (
+              <TabsContent value="comments" className="mt-4">
+                <GradientRingCard variant="sky" padded={false} hoverLift={false} ringIntensity="subtle" innerClassName="p-4 md:p-5">
+                  <CommentManagerPanel platform="facebook" />
+                </GradientRingCard>
+              </TabsContent>
+            )}
+          </Tabs>
+        </Reveal>
+      </div>
+    </DashboardLayout>
+  );
+}

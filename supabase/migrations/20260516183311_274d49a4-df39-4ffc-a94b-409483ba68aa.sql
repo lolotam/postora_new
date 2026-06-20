@@ -1,0 +1,1 @@
+ALTER TABLE public.threads_mentions ADD COLUMN IF NOT EXISTS mention_author_avatar_url TEXT;

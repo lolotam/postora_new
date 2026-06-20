@@ -1,0 +1,146 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+const GRAPH_API = "https://graph.facebook.com/v21.0";
+
+const UpdateSchema = z.object({
+  about: z.string().max(139).optional(),
+  address: z.string().max(256).optional(),
+  description: z.string().max(512).optional(),
+  email: z.string().email().max(128).optional().or(z.literal("")),
+  websites: z.array(z.string().url()).max(2).optional(),
+  vertical: z.string().max(128).optional(),
+});
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    // Service-role client for reading the user's WhatsApp social_account
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Prefer the user's own connected WhatsApp account (from social_accounts);
+    // fall back to global env vars if none is connected.
+    const { data: waAccount } = await supabaseAdmin
+      .from("social_accounts")
+      .select("access_token, platform_user_id")
+      .eq("user_id", user.id)
+      .eq("platform", "whatsapp")
+      .eq("is_active", true)
+      .order("connected_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const accessToken = waAccount?.access_token || Deno.env.get("WHATSAPP_ACCESS_TOKEN");
+    const phoneNumberId = waAccount?.platform_user_id || Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+
+    if (!accessToken || !phoneNumberId) {
+      return new Response(JSON.stringify({ error: "No connected WhatsApp Business account" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (req.method === "GET") {
+      const res = await fetch(
+        `${GRAPH_API}/${phoneNumberId}/whatsapp_business_profile?fields=about,address,description,email,profile_picture_url,websites,vertical`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Meta GET error:", JSON.stringify(data));
+        return new Response(JSON.stringify({ error: "Failed to fetch profile", details: data }), {
+          status: res.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const profile = data.data?.[0] || {};
+      return new Response(JSON.stringify(profile), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (req.method === "POST") {
+      const body = await req.json();
+      const parsed = UpdateSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const updateData: Record<string, unknown> = { messaging_product: "whatsapp" };
+      for (const [key, value] of Object.entries(parsed.data)) {
+        if (value !== undefined) updateData[key] = value;
+      }
+
+      const res = await fetch(
+        `${GRAPH_API}/${phoneNumberId}/whatsapp_business_profile`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Meta POST error:", JSON.stringify(data));
+        return new Response(JSON.stringify({ error: "Failed to update profile", details: data }), {
+          status: res.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("whatsapp-profile error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

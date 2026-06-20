@@ -1,0 +1,806 @@
+{
+  "started_at": "2026-06-02T11:42:33.517943",
+  "target_account_ids": [
+    "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+    "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+    "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+  ],
+  "uploads": [
+    {
+      "post_number": 1,
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-01-schedule-everything.png",
+      "media_file_id": "537f1b60-6eae-4d90-9836-c3a7e1a1bdb6",
+      "result": {
+        "success": true,
+        "media_files": [
+          {
+            "id": "537f1b60-6eae-4d90-9836-c3a7e1a1bdb6",
+            "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+            "file_path": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389757/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-01-schedule-everything_1ruk45v_1780389756914.png",
+            "file_type": "image",
+            "file_size": 1295349,
+            "mime_type": "image/png",
+            "storage_bucket": "cloudinary",
+            "metadata": {
+              "width": 1080,
+              "format": "png",
+              "height": 1080,
+              "duration": null
+            },
+            "created_at": "2026-06-02T08:42:38.683091+00:00",
+            "cloudinary_public_id": "media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-01-schedule-everything_1ruk45v_1780389756914",
+            "platforms": [],
+            "social_account_ids": [],
+            "upload_date": "2026-06-02",
+            "folder_path": "/",
+            "public_url": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389757/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-01-schedule-everything_1ruk45v_1780389756914.png"
+          }
+        ],
+        "media_file_ids": [
+          "537f1b60-6eae-4d90-9836-c3a7e1a1bdb6"
+        ],
+        "total_uploaded": 1,
+        "total_failed": 0
+      }
+    },
+    {
+      "post_number": 2,
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-02-ai-captions-hashtags.png",
+      "media_file_id": "367d8304-828c-49cd-b335-87a1f83914a5",
+      "result": {
+        "success": true,
+        "media_files": [
+          {
+            "id": "367d8304-828c-49cd-b335-87a1f83914a5",
+            "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+            "file_path": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389823/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-02-ai-captions-hashtags_jm3v07_1780389822613.png",
+            "file_type": "image",
+            "file_size": 1262609,
+            "mime_type": "image/png",
+            "storage_bucket": "cloudinary",
+            "metadata": {
+              "width": 1080,
+              "format": "png",
+              "height": 1080,
+              "duration": null
+            },
+            "created_at": "2026-06-02T08:43:44.307689+00:00",
+            "cloudinary_public_id": "media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-02-ai-captions-hashtags_jm3v07_1780389822613",
+            "platforms": [],
+            "social_account_ids": [],
+            "upload_date": "2026-06-02",
+            "folder_path": "/",
+            "public_url": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389823/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-02-ai-captions-hashtags_jm3v07_1780389822613.png"
+          }
+        ],
+        "media_file_ids": [
+          "367d8304-828c-49cd-b335-87a1f83914a5"
+        ],
+        "total_uploaded": 1,
+        "total_failed": 0
+      }
+    },
+    {
+      "post_number": 3,
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-03-one-dashboard-publishing.png",
+      "media_file_id": "49762275-fa73-4739-9067-2f5d67e94176",
+      "result": {
+        "success": true,
+        "media_files": [
+          {
+            "id": "49762275-fa73-4739-9067-2f5d67e94176",
+            "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+            "file_path": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389878/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-03-one-dashboard-publishing_j7xeg7_1780389877955.png",
+            "file_type": "image",
+            "file_size": 1380696,
+            "mime_type": "image/png",
+            "storage_bucket": "cloudinary",
+            "metadata": {
+              "width": 1080,
+              "format": "png",
+              "height": 1080,
+              "duration": null
+            },
+            "created_at": "2026-06-02T08:44:39.58199+00:00",
+            "cloudinary_public_id": "media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-03-one-dashboard-publishing_j7xeg7_1780389877955",
+            "platforms": [],
+            "social_account_ids": [],
+            "upload_date": "2026-06-02",
+            "folder_path": "/",
+            "public_url": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389878/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-03-one-dashboard-publishing_j7xeg7_1780389877955.png"
+          }
+        ],
+        "media_file_ids": [
+          "49762275-fa73-4739-9067-2f5d67e94176"
+        ],
+        "total_uploaded": 1,
+        "total_failed": 0
+      }
+    },
+    {
+      "post_number": 4,
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-04-smart-scheduling.png",
+      "media_file_id": "a750a71d-a757-4c99-b4c6-52c430ed70da",
+      "result": {
+        "success": true,
+        "media_files": [
+          {
+            "id": "a750a71d-a757-4c99-b4c6-52c430ed70da",
+            "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+            "file_path": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389884/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-04-smart-scheduling_aria17_1780389883598.png",
+            "file_type": "image",
+            "file_size": 1265273,
+            "mime_type": "image/png",
+            "storage_bucket": "cloudinary",
+            "metadata": {
+              "width": 1080,
+              "format": "png",
+              "height": 1080,
+              "duration": null
+            },
+            "created_at": "2026-06-02T08:44:45.283594+00:00",
+            "cloudinary_public_id": "media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-04-smart-scheduling_aria17_1780389883598",
+            "platforms": [],
+            "social_account_ids": [],
+            "upload_date": "2026-06-02",
+            "folder_path": "/",
+            "public_url": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389884/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-04-smart-scheduling_aria17_1780389883598.png"
+          }
+        ],
+        "media_file_ids": [
+          "a750a71d-a757-4c99-b4c6-52c430ed70da"
+        ],
+        "total_uploaded": 1,
+        "total_failed": 0
+      }
+    },
+    {
+      "post_number": 5,
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-05-analytics-growth.png",
+      "media_file_id": "430b7198-9e57-4530-b3d9-58868aff148f",
+      "result": {
+        "success": true,
+        "media_files": [
+          {
+            "id": "430b7198-9e57-4530-b3d9-58868aff148f",
+            "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+            "file_path": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389891/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-05-analytics-growth_1904n5s_1780389890542.png",
+            "file_type": "image",
+            "file_size": 1274948,
+            "mime_type": "image/png",
+            "storage_bucket": "cloudinary",
+            "metadata": {
+              "width": 1080,
+              "format": "png",
+              "height": 1080,
+              "duration": null
+            },
+            "created_at": "2026-06-02T08:44:52.217711+00:00",
+            "cloudinary_public_id": "media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-05-analytics-growth_1904n5s_1780389890542",
+            "platforms": [],
+            "social_account_ids": [],
+            "upload_date": "2026-06-02",
+            "folder_path": "/",
+            "public_url": "https://res.cloudinary.com/dur1soa8n/image/upload/v1780389891/media/dr_vet_waleedtam_at_gmail_com/2026-06-02/postora-05-analytics-growth_1904n5s_1780389890542.png"
+          }
+        ],
+        "media_file_ids": [
+          "430b7198-9e57-4530-b3d9-58868aff148f"
+        ],
+        "total_uploaded": 1,
+        "total_failed": 0
+      }
+    }
+  ],
+  "posts": [
+    {
+      "post_number": 1,
+      "requested_status": "publish_now",
+      "scheduled_at": null,
+      "media_file_id": "537f1b60-6eae-4d90-9836-c3a7e1a1bdb6",
+      "result": {
+        "success": true,
+        "post": {
+          "id": "e38b7cca-b2f2-4fba-b714-b52dc65caa81",
+          "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+          "caption": "Still switching tabs just to schedule one post?\n\nMeet Postora Cloud: one dashboard to create, schedule, and publish social media posts across Instagram, Facebook, Threads, and more. Plan your content calendar, keep campaigns organized, and save time every week with AI-powered social media management.\n\nStart managing your social content at https://postora.cloud\n\n#Postora #PostoraCloud #SocialMediaManagement #SocialMediaScheduler #ContentCalendar #InstagramMarketing #FacebookMarketing #ThreadsApp #AIMarketing #CreatorTools #DigitalMarketing #MarketingAutomation",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "media_file_ids": [
+            "537f1b60-6eae-4d90-9836-c3a7e1a1bdb6"
+          ],
+          "status": "pending",
+          "scheduled_at": null,
+          "posted_at": null,
+          "metadata": {
+            "timeout": 600,
+            "facebook": {},
+            "timezone": "Asia/Kuwait",
+            "instagram": {
+              "userTags": [],
+              "mediaType": "feed",
+              "shareToFeed": true,
+              "collaborators": []
+            },
+            "operation": "upload_photos",
+            "upload_async": true,
+            "facebook_link": null,
+            "poll_interval": 10,
+            "facebook_location": null,
+            "facebook_post_type": "feed",
+            "wait_for_completion": true,
+            "selected_account_ids": [
+              "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+              "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+              "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            ],
+            "facebook_first_comment": null,
+            "facebook_share_to_story": false,
+            "instagram_first_comment": null,
+            "facebook_reel_description": null
+          },
+          "created_at": "2026-06-02T08:42:41.315694+00:00",
+          "source": "api"
+        },
+        "scheduled": false,
+        "message": "Post created and processing started",
+        "metadata_applied": {
+          "selected_account_ids": [
+            "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+            "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+            "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+          ],
+          "instagram": {
+            "mediaType": "feed",
+            "collaborators": [],
+            "userTags": [],
+            "shareToFeed": true
+          },
+          "instagram_first_comment": null,
+          "facebook": {},
+          "facebook_post_type": "feed",
+          "facebook_reel_description": null,
+          "facebook_location": null,
+          "facebook_first_comment": null,
+          "facebook_link": null,
+          "facebook_share_to_story": false,
+          "operation": "upload_photos",
+          "upload_async": true,
+          "wait_for_completion": true,
+          "poll_interval": 10,
+          "timeout": 600,
+          "timezone": "Asia/Kuwait"
+        },
+        "account_ids_used": [
+          "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+          "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+          "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+        ]
+      }
+    },
+    {
+      "post_number": 2,
+      "requested_status": "publish_now",
+      "scheduled_at": null,
+      "media_file_id": "367d8304-828c-49cd-b335-87a1f83914a5",
+      "result": {
+        "success": true,
+        "post": {
+          "id": "ffaba054-52b4-4fbc-a2ef-aa3e02f15e3d",
+          "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+          "caption": "Blank caption box? Let AI do the first draft.\n\nPostora helps creators, agencies, and businesses generate captions, hashtags, and post ideas faster. Turn a simple idea into platform-ready content, then schedule it from the same workspace.\n\nTry smarter content creation at https://postora.cloud\n\n#Postora #AIContentCreation #CaptionGenerator #HashtagGenerator #SocialMediaTools #ContentMarketing #InstagramGrowth #FacebookPage #ThreadsMarketing #MarketingAI #SmallBusinessMarketing #CreatorWorkflow",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "media_file_ids": [
+            "367d8304-828c-49cd-b335-87a1f83914a5"
+          ],
+          "status": "pending",
+          "scheduled_at": null,
+          "posted_at": null,
+          "metadata": {
+            "timeout": 600,
+            "facebook": {},
+            "timezone": "Asia/Kuwait",
+            "instagram": {
+              "userTags": [],
+              "mediaType": "feed",
+              "shareToFeed": true,
+              "collaborators": []
+            },
+            "operation": "upload_photos",
+            "upload_async": true,
+            "facebook_link": null,
+            "poll_interval": 10,
+            "facebook_location": null,
+            "facebook_post_type": "feed",
+            "wait_for_completion": true,
+            "selected_account_ids": [
+              "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+              "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+              "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            ],
+            "facebook_first_comment": null,
+            "facebook_share_to_story": false,
+            "instagram_first_comment": null,
+            "facebook_reel_description": null
+          },
+          "created_at": "2026-06-02T08:43:46.002972+00:00",
+          "source": "api"
+        },
+        "scheduled": false,
+        "message": "Post created and processing started",
+        "metadata_applied": {
+          "selected_account_ids": [
+            "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+            "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+            "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+          ],
+          "instagram": {
+            "mediaType": "feed",
+            "collaborators": [],
+            "userTags": [],
+            "shareToFeed": true
+          },
+          "instagram_first_comment": null,
+          "facebook": {},
+          "facebook_post_type": "feed",
+          "facebook_reel_description": null,
+          "facebook_location": null,
+          "facebook_first_comment": null,
+          "facebook_link": null,
+          "facebook_share_to_story": false,
+          "operation": "upload_photos",
+          "upload_async": true,
+          "wait_for_completion": true,
+          "poll_interval": 10,
+          "timeout": 600,
+          "timezone": "Asia/Kuwait"
+        },
+        "account_ids_used": [
+          "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+          "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+          "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+        ]
+      }
+    },
+    {
+      "post_number": 3,
+      "requested_status": "scheduled",
+      "scheduled_at": "2026-06-03T07:00:00+03:00",
+      "media_file_id": "49762275-fa73-4739-9067-2f5d67e94176",
+      "result": {
+        "success": true,
+        "post": {
+          "id": "e933a8f7-b009-4c20-b3d0-f9108317c6e1",
+          "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+          "caption": "One post. Multiple platforms. Less manual work.\n\nPostora Cloud brings multi-platform posting into one clean workflow. Prepare your content once, customize platform settings, and publish to the channels your audience already uses.\n\nBuild your next post workflow at https://postora.cloud\n\n#PostoraCloud #MultiPlatformPosting #SocialMediaAutomation #InstagramContent #FacebookContent #ThreadsContent #SocialMediaWorkflow #SaaSTools #MarketingStack #ContentOps #DigitalCreators #Postora",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "media_file_ids": [
+            "49762275-fa73-4739-9067-2f5d67e94176"
+          ],
+          "status": "scheduled",
+          "scheduled_at": "2026-06-03T04:00:00+00:00",
+          "posted_at": null,
+          "metadata": {
+            "timeout": 600,
+            "facebook": {},
+            "timezone": "Asia/Kuwait",
+            "instagram": {
+              "userTags": [],
+              "mediaType": "feed",
+              "shareToFeed": true,
+              "collaborators": []
+            },
+            "operation": "upload_photos",
+            "upload_async": true,
+            "facebook_link": null,
+            "poll_interval": 10,
+            "facebook_location": null,
+            "facebook_post_type": "feed",
+            "wait_for_completion": true,
+            "selected_account_ids": [
+              "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+              "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+              "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            ],
+            "facebook_first_comment": null,
+            "facebook_share_to_story": false,
+            "instagram_first_comment": null,
+            "facebook_reel_description": null
+          },
+          "created_at": "2026-06-02T08:44:41.258925+00:00",
+          "source": "api"
+        },
+        "scheduled": true,
+        "message": "Post scheduled successfully",
+        "metadata_applied": {
+          "selected_account_ids": [
+            "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+            "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+            "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+          ],
+          "instagram": {
+            "mediaType": "feed",
+            "collaborators": [],
+            "userTags": [],
+            "shareToFeed": true
+          },
+          "instagram_first_comment": null,
+          "facebook": {},
+          "facebook_post_type": "feed",
+          "facebook_reel_description": null,
+          "facebook_location": null,
+          "facebook_first_comment": null,
+          "facebook_link": null,
+          "facebook_share_to_story": false,
+          "operation": "upload_photos",
+          "upload_async": true,
+          "wait_for_completion": true,
+          "poll_interval": 10,
+          "timeout": 600,
+          "timezone": "Asia/Kuwait"
+        },
+        "account_ids_used": [
+          "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+          "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+          "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+        ]
+      }
+    },
+    {
+      "post_number": 4,
+      "requested_status": "scheduled",
+      "scheduled_at": "2026-06-03T14:00:00+03:00",
+      "media_file_id": "a750a71d-a757-4c99-b4c6-52c430ed70da",
+      "result": {
+        "success": true,
+        "post": {
+          "id": "4bac8366-bc29-4d06-a085-8f819e11d260",
+          "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+          "caption": "Your content calendar should work as hard as you do.\n\nSchedule posts ahead of time with Postora Cloud and keep your brand consistent across the day. Perfect for founders, marketers, and agencies managing busy social media calendars.\n\nPlan your next week of posts at https://postora.cloud\n\n#SocialMediaScheduling #ContentCalendar #PostScheduling #Postora #MarketingProductivity #AgencyTools #FounderTools #InstagramScheduler #FacebookScheduler #ThreadsScheduler #ContentPlanning #MarketingAutomation",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "media_file_ids": [
+            "a750a71d-a757-4c99-b4c6-52c430ed70da"
+          ],
+          "status": "scheduled",
+          "scheduled_at": "2026-06-03T11:00:00+00:00",
+          "posted_at": null,
+          "metadata": {
+            "timeout": 600,
+            "facebook": {},
+            "timezone": "Asia/Kuwait",
+            "instagram": {
+              "userTags": [],
+              "mediaType": "feed",
+              "shareToFeed": true,
+              "collaborators": []
+            },
+            "operation": "upload_photos",
+            "upload_async": true,
+            "facebook_link": null,
+            "poll_interval": 10,
+            "facebook_location": null,
+            "facebook_post_type": "feed",
+            "wait_for_completion": true,
+            "selected_account_ids": [
+              "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+              "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+              "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            ],
+            "facebook_first_comment": null,
+            "facebook_share_to_story": false,
+            "instagram_first_comment": null,
+            "facebook_reel_description": null
+          },
+          "created_at": "2026-06-02T08:44:47.397319+00:00",
+          "source": "api"
+        },
+        "scheduled": true,
+        "message": "Post scheduled successfully",
+        "metadata_applied": {
+          "selected_account_ids": [
+            "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+            "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+            "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+          ],
+          "instagram": {
+            "mediaType": "feed",
+            "collaborators": [],
+            "userTags": [],
+            "shareToFeed": true
+          },
+          "instagram_first_comment": null,
+          "facebook": {},
+          "facebook_post_type": "feed",
+          "facebook_reel_description": null,
+          "facebook_location": null,
+          "facebook_first_comment": null,
+          "facebook_link": null,
+          "facebook_share_to_story": false,
+          "operation": "upload_photos",
+          "upload_async": true,
+          "wait_for_completion": true,
+          "poll_interval": 10,
+          "timeout": 600,
+          "timezone": "Asia/Kuwait"
+        },
+        "account_ids_used": [
+          "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+          "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+          "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+        ]
+      }
+    },
+    {
+      "post_number": 5,
+      "requested_status": "scheduled",
+      "scheduled_at": "2026-06-03T20:00:00+03:00",
+      "media_file_id": "430b7198-9e57-4530-b3d9-58868aff148f",
+      "result": {
+        "success": true,
+        "post": {
+          "id": "2a9fd44f-734d-4be5-80f6-247d8991cae1",
+          "user_id": "7fe4d34e-1975-46fb-9dac-9c2df7a9eed6",
+          "caption": "Posting is only step one. Growth needs visibility.\n\nPostora Cloud helps you manage publishing, monitor performance, and improve your social media strategy from one place. Create smarter workflows for Instagram, Facebook, Threads, and your wider content stack.\n\nUpgrade your social media management at https://postora.cloud\n\n#SocialMediaAnalytics #MarketingDashboard #PostoraCloud #ContentStrategy #InstagramAnalytics #FacebookAnalytics #ThreadsApp #SocialMediaGrowth #DigitalMarketingTools #AIMarketingTools #SaaSMarketing #Postora",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "media_file_ids": [
+            "430b7198-9e57-4530-b3d9-58868aff148f"
+          ],
+          "status": "scheduled",
+          "scheduled_at": "2026-06-03T17:00:00+00:00",
+          "posted_at": null,
+          "metadata": {
+            "timeout": 600,
+            "facebook": {},
+            "timezone": "Asia/Kuwait",
+            "instagram": {
+              "userTags": [],
+              "mediaType": "feed",
+              "shareToFeed": true,
+              "collaborators": []
+            },
+            "operation": "upload_photos",
+            "upload_async": true,
+            "facebook_link": null,
+            "poll_interval": 10,
+            "facebook_location": null,
+            "facebook_post_type": "feed",
+            "wait_for_completion": true,
+            "selected_account_ids": [
+              "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+              "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+              "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            ],
+            "facebook_first_comment": null,
+            "facebook_share_to_story": false,
+            "instagram_first_comment": null,
+            "facebook_reel_description": null
+          },
+          "created_at": "2026-06-02T08:44:54.125071+00:00",
+          "source": "api"
+        },
+        "scheduled": true,
+        "message": "Post scheduled successfully",
+        "metadata_applied": {
+          "selected_account_ids": [
+            "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+            "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+            "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+          ],
+          "instagram": {
+            "mediaType": "feed",
+            "collaborators": [],
+            "userTags": [],
+            "shareToFeed": true
+          },
+          "instagram_first_comment": null,
+          "facebook": {},
+          "facebook_post_type": "feed",
+          "facebook_reel_description": null,
+          "facebook_location": null,
+          "facebook_first_comment": null,
+          "facebook_link": null,
+          "facebook_share_to_story": false,
+          "operation": "upload_photos",
+          "upload_async": true,
+          "wait_for_completion": true,
+          "poll_interval": 10,
+          "timeout": 600,
+          "timezone": "Asia/Kuwait"
+        },
+        "account_ids_used": [
+          "ed75098d-22a1-48fb-b96e-67ad4d4a244d",
+          "c5ebe946-51bf-4e86-aba0-8aa4bb91904d",
+          "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+        ]
+      }
+    }
+  ],
+  "finished_at": "2026-06-02T11:44:54.946033",
+  "verification": [
+    {
+      "post_number": 1,
+      "post_id": "e38b7cca-b2f2-4fba-b714-b52dc65caa81",
+      "detail": {
+        "success": true,
+        "post": {
+          "id": "e38b7cca-b2f2-4fba-b714-b52dc65caa81",
+          "caption": "Still switching tabs just to schedule one post?\n\nMeet Postora Cloud: one dashboard to create, schedule, and publish social media posts across Instagram, Facebook, Threads, and more. Plan your content calendar, keep campaigns organized, and save time every week with AI-powered social media management.\n\nStart managing your social content at https://postora.cloud\n\n#Postora #PostoraCloud #SocialMediaManagement #SocialMediaScheduler #ContentCalendar #InstagramMarketing #FacebookMarketing #ThreadsApp #AIMarketing #CreatorTools #DigitalMarketing #MarketingAutomation",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "status": "completed",
+          "scheduled_at": null,
+          "posted_at": "2026-06-02T08:43:38.661+00:00",
+          "created_at": "2026-06-02T08:42:41.315694+00:00",
+          "source": "api",
+          "platform_results": [
+            {
+              "platform": "instagram",
+              "status": "success",
+              "post_id": "17891328024487702",
+              "post_url": "https://www.instagram.com/p/DZE8QAxCEkc/",
+              "error_message": null,
+              "posted_at": "2026-06-02T08:43:16.183+00:00",
+              "social_account_id": "c5ebe946-51bf-4e86-aba0-8aa4bb91904d"
+            },
+            {
+              "platform": "threads",
+              "status": "success",
+              "post_id": "18105424348798990",
+              "post_url": "https://www.threads.com/@postora.cloud/post/DZE8SgXCAUY",
+              "error_message": null,
+              "posted_at": "2026-06-02T08:43:38.476+00:00",
+              "social_account_id": "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            },
+            {
+              "platform": "facebook",
+              "status": "success",
+              "post_id": "122108966312690192",
+              "post_url": "https://www.facebook.com/photo.php?fbid=122108966294690192&set=a.122099682704690192&type=3",
+              "error_message": null,
+              "posted_at": "2026-06-02T08:42:55.821+00:00",
+              "social_account_id": "ed75098d-22a1-48fb-b96e-67ad4d4a244d"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "post_number": 2,
+      "post_id": "ffaba054-52b4-4fbc-a2ef-aa3e02f15e3d",
+      "detail": {
+        "success": true,
+        "post": {
+          "id": "ffaba054-52b4-4fbc-a2ef-aa3e02f15e3d",
+          "caption": "Blank caption box? Let AI do the first draft.\n\nPostora helps creators, agencies, and businesses generate captions, hashtags, and post ideas faster. Turn a simple idea into platform-ready content, then schedule it from the same workspace.\n\nTry smarter content creation at https://postora.cloud\n\n#Postora #AIContentCreation #CaptionGenerator #HashtagGenerator #SocialMediaTools #ContentMarketing #InstagramGrowth #FacebookPage #ThreadsMarketing #MarketingAI #SmallBusinessMarketing #CreatorWorkflow",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "status": "completed",
+          "scheduled_at": null,
+          "posted_at": "2026-06-02T08:44:34.972+00:00",
+          "created_at": "2026-06-02T08:43:46.002972+00:00",
+          "source": "api",
+          "platform_results": [
+            {
+              "platform": "facebook",
+              "status": "failed",
+              "post_id": null,
+              "post_url": null,
+              "error_message": "Facebook API error: Please reduce the amount of data you're asking for, then retry your request (code: 1)",
+              "posted_at": null,
+              "social_account_id": "ed75098d-22a1-48fb-b96e-67ad4d4a244d"
+            },
+            {
+              "platform": "instagram",
+              "status": "success",
+              "post_id": "18107329940315673",
+              "post_url": "https://www.instagram.com/p/DZE8YyDF90B/",
+              "error_message": null,
+              "posted_at": "2026-06-02T08:44:22.011+00:00",
+              "social_account_id": "c5ebe946-51bf-4e86-aba0-8aa4bb91904d"
+            },
+            {
+              "platform": "threads",
+              "status": "success",
+              "post_id": "17886164100561903",
+              "post_url": "https://www.threads.com/@postora.cloud/post/DZE8aV4F-HL",
+              "error_message": null,
+              "posted_at": "2026-06-02T08:44:34.774+00:00",
+              "social_account_id": "0438b58b-33fc-4546-b1fe-52cbbd5767d7"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "post_number": 3,
+      "post_id": "e933a8f7-b009-4c20-b3d0-f9108317c6e1",
+      "detail": {
+        "success": true,
+        "post": {
+          "id": "e933a8f7-b009-4c20-b3d0-f9108317c6e1",
+          "caption": "One post. Multiple platforms. Less manual work.\n\nPostora Cloud brings multi-platform posting into one clean workflow. Prepare your content once, customize platform settings, and publish to the channels your audience already uses.\n\nBuild your next post workflow at https://postora.cloud\n\n#PostoraCloud #MultiPlatformPosting #SocialMediaAutomation #InstagramContent #FacebookContent #ThreadsContent #SocialMediaWorkflow #SaaSTools #MarketingStack #ContentOps #DigitalCreators #Postora",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "status": "scheduled",
+          "scheduled_at": "2026-06-03T04:00:00+00:00",
+          "posted_at": null,
+          "created_at": "2026-06-02T08:44:41.258925+00:00",
+          "source": "api",
+          "platform_results": []
+        }
+      }
+    },
+    {
+      "post_number": 4,
+      "post_id": "4bac8366-bc29-4d06-a085-8f819e11d260",
+      "detail": {
+        "success": true,
+        "post": {
+          "id": "4bac8366-bc29-4d06-a085-8f819e11d260",
+          "caption": "Your content calendar should work as hard as you do.\n\nSchedule posts ahead of time with Postora Cloud and keep your brand consistent across the day. Perfect for founders, marketers, and agencies managing busy social media calendars.\n\nPlan your next week of posts at https://postora.cloud\n\n#SocialMediaScheduling #ContentCalendar #PostScheduling #Postora #MarketingProductivity #AgencyTools #FounderTools #InstagramScheduler #FacebookScheduler #ThreadsScheduler #ContentPlanning #MarketingAutomation",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "status": "scheduled",
+          "scheduled_at": "2026-06-03T11:00:00+00:00",
+          "posted_at": null,
+          "created_at": "2026-06-02T08:44:47.397319+00:00",
+          "source": "api",
+          "platform_results": []
+        }
+      }
+    },
+    {
+      "post_number": 5,
+      "post_id": "2a9fd44f-734d-4be5-80f6-247d8991cae1",
+      "detail": {
+        "success": true,
+        "post": {
+          "id": "2a9fd44f-734d-4be5-80f6-247d8991cae1",
+          "caption": "Posting is only step one. Growth needs visibility.\n\nPostora Cloud helps you manage publishing, monitor performance, and improve your social media strategy from one place. Create smarter workflows for Instagram, Facebook, Threads, and your wider content stack.\n\nUpgrade your social media management at https://postora.cloud\n\n#SocialMediaAnalytics #MarketingDashboard #PostoraCloud #ContentStrategy #InstagramAnalytics #FacebookAnalytics #ThreadsApp #SocialMediaGrowth #DigitalMarketingTools #AIMarketingTools #SaaSMarketing #Postora",
+          "platforms": [
+            "facebook",
+            "instagram",
+            "threads"
+          ],
+          "status": "scheduled",
+          "scheduled_at": "2026-06-03T17:00:00+00:00",
+          "posted_at": null,
+          "created_at": "2026-06-02T08:44:54.125071+00:00",
+          "source": "api",
+          "platform_results": []
+        }
+      }
+    }
+  ]
+}

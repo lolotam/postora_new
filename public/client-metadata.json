@@ -1,0 +1,19 @@
+{
+  "client_id": "https://postora.cloud/client-metadata.json",
+  "client_name": "Postora",
+  "client_uri": "https://postora.cloud",
+  "logo_uri": "https://postora.cloud/favicon.png",
+  "tos_uri": "https://postora.cloud/terms",
+  "policy_uri": "https://postora.cloud/privacy",
+  "redirect_uris": [
+    "https://postora.cloud/profiles",
+    "https://postora.lovable.app/profiles",
+    "https://id-preview--b52780c5-cd0a-406b-a6a2-d9724d901b18.lovable.app/profiles"
+  ],
+  "scope": "atproto transition:generic",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}

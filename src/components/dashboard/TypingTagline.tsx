@@ -1,0 +1,35 @@
+import { useState, useEffect } from "react";
+
+const TAGLINE =
+  "Postora helps creators and marketers schedule, create, and publish content across Instagram, YouTube, TikTok, LinkedIn, and 7 more platforms — all from one beautiful dashboard.";
+
+export function TypingTagline() {
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!isDeleting && charIndex >= TAGLINE.length) {
+      const pause = setTimeout(() => setIsDeleting(true), 2000);
+      return () => clearTimeout(pause);
+    }
+    if (isDeleting && charIndex === 0) {
+      const pause = setTimeout(() => setIsDeleting(false), 500);
+      return () => clearTimeout(pause);
+    }
+    const speed = isDeleting ? 15 : 40;
+    const timer = setTimeout(
+      () => setCharIndex((i) => i + (isDeleting ? -1 : 1)),
+      speed
+    );
+    return () => clearTimeout(timer);
+  }, [charIndex, isDeleting]);
+
+  return (
+    <div className="max-w-2xl mt-2">
+      <p className="text-sm font-medium tracking-wide bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent inline">
+        {TAGLINE.slice(0, charIndex)}
+      </p>
+      <span className="inline-block w-[2px] h-4 ml-0.5 bg-primary animate-pulse align-text-bottom" />
+    </div>
+  );
+}

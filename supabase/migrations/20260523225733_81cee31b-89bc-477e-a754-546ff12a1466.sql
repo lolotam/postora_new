@@ -1,0 +1,2 @@
+UPDATE public.app_settings SET value = '"4457661717842309"'::jsonb, updated_at = now() WHERE key = 'META_WHATSAPP_CONFIG_ID';
+UPDATE public.app_settings SET value = '"977705824856921"'::jsonb, updated_at = now() WHERE key = 'META_WHATSAPP_COEXISTENCE_CONFIG_ID';

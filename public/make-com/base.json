@@ -1,0 +1,12 @@
+{
+  "name": "postora",
+  "label": "Postora",
+  "description": "Automate social media publishing across Instagram, Facebook, TikTok, YouTube, LinkedIn, Pinterest, Threads, Bluesky, Reddit, and X/Twitter with Postora.",
+  "version": "1.0.0",
+  "baseUrl": "https://api.postora.cloud/functions/v1/n8n-api",
+  "logo": "https://postora.cloud/lovable-uploads/logo.png",
+  "language": "en",
+  "audience": ["public"],
+  "countries": ["all"],
+  "categories": ["social-media", "marketing"]
+}

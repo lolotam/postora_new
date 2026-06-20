@@ -1,0 +1,13 @@
+project_id = "efruibswazzuuupgyzmf"
+
+[functions.threads-webhook]
+verify_jwt = false
+
+[functions.mcp]
+verify_jwt = false
+
+[functions.mcp-oauth]
+verify_jwt = false
+
+[functions.ecommerce-whatsapp-api]
+verify_jwt = false

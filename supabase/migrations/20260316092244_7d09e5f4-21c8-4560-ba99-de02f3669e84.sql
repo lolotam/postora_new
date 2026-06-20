@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ALTER COLUMN email_notifications_enabled SET DEFAULT false;

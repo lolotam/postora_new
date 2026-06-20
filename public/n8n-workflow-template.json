@@ -1,0 +1,231 @@
+{
+  "name": "Postora - Social Media Publisher",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "api_key",
+              "value": "={{ $env.POSTORA_API_KEY }}"
+            },
+            {
+              "name": "api_base",
+              "value": "https://api.postora.cloud/functions/v1/n8n-api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config-node",
+      "name": "Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [450, 300],
+      "notesInFlow": true,
+      "notes": "⚙️ Set your Postora API key here or use environment variable"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.api_base }}/api/v1/upload-media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $json.api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "parameterType": "formBinaryData",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "upload-media-node",
+      "name": "Upload Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 180],
+      "notesInFlow": true,
+      "notes": "📤 Upload image/video file\nInput: Binary data in 'data' field\nOutput: media_file.id"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.api_base }}/api/v1/post",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Configuration').item.json.api_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"caption\": \"Your post caption here! 🚀 #socialmedia #automation\",\n  \"platforms\": [\"instagram\", \"facebook\", \"tiktok\", \"youtube\"],\n  \"media_file_ids\": [\"{{ $json.media_file.id }}\"],\n  \"scheduled_at\": null,\n  \n  \"youtube_privacy\": \"public\",\n  \"youtube_title\": \"My Video Title\",\n  \"youtube_description\": \"Video description here\",\n  \"youtube_tags\": [\"tag1\", \"tag2\"],\n  \n  \"tiktok_post_mode\": \"DIRECT_POST\",\n  \"tiktok_allow_comments\": true,\n  \"tiktok_allow_duet\": true,\n  \"tiktok_allow_stitch\": true,\n  \n  \"instagram_collaborators\": [],\n  \"instagram_share_to_feed\": true,\n  \n  \"pinterest_board_id\": \"\",\n  \"pinterest_title\": \"\",\n  \"pinterest_link\": \"\"\n}",
+        "options": {}
+      },
+      "id": "create-post-node",
+      "name": "Create Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300],
+      "notesInFlow": true,
+      "notes": "📱 Publish to all platforms\nEdit the JSON body to customize your post"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Configuration').item.json.api_base }}/api/v1/accounts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Configuration').item.json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "list-accounts-node",
+      "name": "List Connected Accounts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 420],
+      "notesInFlow": true,
+      "notes": "👥 Get all connected social accounts"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Configuration').item.json.api_base }}/api/v1/posts?limit=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Configuration').item.json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "list-posts-node",
+      "name": "List Recent Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 540],
+      "notesInFlow": true,
+      "notes": "📋 Get post history"
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Postora n8n Workflow Template\n\n### Quick Start:\n1. **Set your API key** in the Configuration node\n2. **Connect your trigger** (Manual, Schedule, Webhook, etc.)\n3. **Upload media** (optional) via Upload Media node\n4. **Create your post** with captions and platform selection\n\n### Available Endpoints:\n- **POST /api/v1/upload-media** - Upload images/videos\n- **POST /api/v1/post** - Create and publish posts\n- **GET /api/v1/accounts** - List connected accounts\n- **GET /api/v1/posts** - View post history\n\n### Platform-Specific Fields:\n\n**YouTube:**\n- `youtube_privacy`: private, unlisted, public\n- `youtube_title`, `youtube_description`, `youtube_tags`\n\n**TikTok:**\n- `tiktok_post_mode`: DIRECT_POST, MEDIA_UPLOAD (draft)\n- `tiktok_allow_comments`, `tiktok_allow_duet`, `tiktok_allow_stitch`\n\n**Instagram:**\n- `instagram_collaborators`: Array of usernames\n- `instagram_share_to_feed`: true/false\n\n**Pinterest:**\n- `pinterest_board_id`, `pinterest_title`, `pinterest_link`\n\n**LinkedIn:**\n- `linkedin_page_id` (for organization pages)\n\n📖 Full docs: https://postora.app/docs/n8n-integration",
+        "height": 600,
+        "width": 400
+      },
+      "id": "sticky-note",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [60, 100]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuration": {
+      "main": [
+        [
+          {
+            "node": "Upload Media",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List Connected Accounts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List Recent Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Media": {
+      "main": [
+        [
+          {
+            "node": "Create Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Social Media",
+      "id": "1"
+    },
+    {
+      "name": "Postora",
+      "id": "2"
+    },
+    {
+      "name": "Automation",
+      "id": "3"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-01-08T00:00:00.000Z",
+  "versionId": "1"
+}

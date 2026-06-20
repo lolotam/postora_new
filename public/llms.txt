@@ -1,0 +1,45 @@
+# Postora
+
+> Social media management platform to schedule, create, and publish posts across Instagram, YouTube, TikTok, LinkedIn, Facebook, Threads, Pinterest, Twitter/X, Bluesky, and Reddit from one dashboard.
+
+Postora helps creators, marketers, and teams plan content, generate captions and images with AI, schedule across multiple accounts, and review analytics. It also exposes a public REST API and integrations for n8n, Make.com, and an MCP server.
+
+## Pages
+
+- [Home](/): Product overview and features.
+- [Pricing](/pricing): Plans for individuals, creators, and teams.
+- [Contact](/contact): Reach the Postora team.
+- [Privacy Policy](/privacy): How user data is handled.
+- [Terms of Service](/terms): Usage terms.
+- [Cookie Policy](/cookies): Cookie usage details.
+- [Google API Disclosure](/google-api-disclosure): Google API limited use disclosure.
+
+## Docs
+
+- [Documentation](/docs): Getting started and guides.
+- [API Reference](/docs/api): REST API for posts, media, and accounts.
+- [n8n Integration](/docs/n8n-integration): Automate Postora from n8n workflows.
+- [Make.com Integration](/docs/make-integration): Connect Postora with Make scenarios.
+- [MCP Server](/docs/mcp-server): Drive Postora from AI assistants over MCP.
+- [Multi-platform guide](/docs/multi-platform): Posting across platforms.
+- [Webhooks](/docs/webhooks): Subscribe to post events.
+- [Character limits](/docs/character-limits): Per-platform caption and media limits.
+- [Platform media matrix](/docs/media-matrix): Supported media types per platform.
+
+## Platform API guides
+
+- [Instagram API](/docs/instagram-api)
+- [Facebook API](/docs/facebook-api)
+- [YouTube API](/docs/youtube-api)
+- [TikTok API](/docs/tiktok-api)
+- [LinkedIn API](/docs/linkedin-api)
+- [Twitter API](/docs/twitter-api)
+- [Threads API](/docs/threads-api)
+- [Pinterest API](/docs/pinterest-api)
+- [Bluesky API](/docs/bluesky-api)
+- [Reddit API](/docs/reddit-api)
+
+## Optional
+
+- [Sign in](/auth): Account sign in and sign up.
+- [Reset password](/reset-password)

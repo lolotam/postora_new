@@ -1,0 +1,41 @@
+{
+  "name": "getPostStatus",
+  "label": "Get Post Status",
+  "description": "Retrieve the status and platform results of a specific post.",
+  "actionType": "action",
+  "communication": {
+    "url": "{{baseUrl}}/api/v1/post/{{parameters.postId}}",
+    "method": "GET",
+    "headers": {
+      "x-api-key": "{{connection.apiKey}}"
+    },
+    "response": {
+      "output": "{{body}}"
+    }
+  },
+  "parameters": [
+    {
+      "name": "postId",
+      "type": "text",
+      "label": "Post ID",
+      "required": true,
+      "help": "The UUID of the post to check."
+    }
+  ],
+  "interface": [
+    { "name": "id", "type": "text" },
+    { "name": "caption", "type": "text" },
+    { "name": "status", "type": "text" },
+    { "name": "platforms", "type": "array", "spec": { "type": "text" } },
+    { "name": "scheduled_at", "type": "date" },
+    { "name": "posted_at", "type": "date" },
+    { "name": "created_at", "type": "date" },
+    { "name": "platform_posts", "type": "collection", "spec": [
+      { "name": "platform", "type": "text" },
+      { "name": "status", "type": "text" },
+      { "name": "platform_post_url", "type": "text" },
+      { "name": "error_message", "type": "text" },
+      { "name": "posted_at", "type": "date" }
+    ]}
+  ]
+}

@@ -1,0 +1,1 @@
+UPDATE public.ai_models SET is_active = true WHERE model_id = 'MiniMax-M1' AND EXISTS (SELECT 1 FROM ai_providers WHERE ai_providers.id = ai_models.provider_id AND provider_code = 'minimax');

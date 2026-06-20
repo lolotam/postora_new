@@ -1,0 +1,4 @@
+UPDATE public.social_accounts 
+SET access_token = 'EAAvpkYNrGGgBRIa0xYg4OcaXTXJhbsSw3VUB3vZCKtpDFopvESkK1FhGbUXPcQUkZCkegv0HdnvubEdW7qWtB8sv5uvEzYUbNseidnmsU1jOQar8NS4FHXWBcfs1llZCVyyUCIY9Aj4rLca7NlWqEIt5s4hG3VqSDXuxG9ugiU3u2Atz7lz6Pioa4AYCLGU8u4BZCPfDgueIt1DUPOxa9L1BwUZB1vAyR8SZAD9KwKhgMuyrOhZBIPAl5tHo6d232fooIpVMZCjwRicsKZBWK7EqINCgpOxhKexa9Uh1nRAZDZD',
+    updated_at = now()
+WHERE id = '3287c375-3aab-49cf-a8ff-3d7056aa8c1f';

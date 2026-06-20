@@ -1,0 +1,47 @@
+{
+  "name": "listAccounts",
+  "label": "List Connected Accounts",
+  "description": "Retrieve all connected social media accounts.",
+  "actionType": "search",
+  "communication": {
+    "url": "{{baseUrl}}/api/v1/accounts",
+    "method": "GET",
+    "headers": {
+      "x-api-key": "{{connection.apiKey}}"
+    },
+    "qs": {
+      "platform": "{{parameters.platformFilter}}"
+    },
+    "response": {
+      "output": "{{body.accounts}}"
+    }
+  },
+  "parameters": [
+    {
+      "name": "platformFilter",
+      "type": "select",
+      "label": "Platform Filter",
+      "required": false,
+      "options": [
+        { "label": "All", "value": "" },
+        { "label": "Facebook", "value": "facebook" },
+        { "label": "Instagram", "value": "instagram" },
+        { "label": "TikTok", "value": "tiktok" },
+        { "label": "YouTube", "value": "youtube" },
+        { "label": "LinkedIn", "value": "linkedin" },
+        { "label": "X / Twitter", "value": "twitter" },
+        { "label": "Pinterest", "value": "pinterest" },
+        { "label": "Threads", "value": "threads" },
+        { "label": "Bluesky", "value": "bluesky" },
+        { "label": "Reddit", "value": "reddit" }
+      ]
+    }
+  ],
+  "interface": [
+    { "name": "id", "type": "text" },
+    { "name": "platform", "type": "text" },
+    { "name": "platform_username", "type": "text" },
+    { "name": "is_active", "type": "boolean" },
+    { "name": "connected_at", "type": "date" }
+  ]
+}

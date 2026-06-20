@@ -1,0 +1,485 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PlatformIcon, getPlatformName, ExtendedPlatform } from "@/components/PlatformIcon";
+import { Platform } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { PLATFORM_TOKEN_INFO } from "@/lib/tokenExpiryConstants";
+import { useProfileOAuth } from "@/hooks/useProfileOAuth";
+import {
+    RefreshCw,
+    CheckCircle2,
+    AlertCircle,
+    Clock,
+    XCircle,
+    Loader2,
+    Activity,
+    Shield,
+    Zap,
+    Link2,
+    ExternalLink,
+    Info,
+    RotateCcw,
+    Mail,
+} from "lucide-react";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface SocialAccountHealth {
+    id: string;
+    platform: Platform;
+    platform_username: string | null;
+    avatar_url: string | null;
+    token_expires_at: string | null;
+    updated_at: string;
+    connected_at: string;
+    is_active: boolean;
+    needs_reauth: boolean;
+    failure_count: number;
+    last_refresh_error: string | null;
+    social_profile_id: string | null;
+}
+
+type HealthStatus = "healthy" | "expired" | "unknown" | "needs_reauth";
+
+function getTokenHealth(expiresAt: string | null, platform: string, needsReauth?: boolean): { status: HealthStatus; daysLeft: number | null; hoursLeft: number | null; message: string } {
+    // Check needs_reauth first
+    if (needsReauth) {
+        return { status: "needs_reauth", daysLeft: null, hoursLeft: null, message: "Reconnection required" };
+    }
+
+    if (!expiresAt) {
+        return { status: "unknown", daysLeft: null, hoursLeft: null, message: "No expiry info" };
+    }
+
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const diffMs = expiry.getTime() - now.getTime();
+    const hoursLeft = Math.ceil(diffMs / (1000 * 60 * 60));
+    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    // Get platform-specific threshold
+    const platformInfo = PLATFORM_TOKEN_INFO[platform.toLowerCase()];
+    const thresholdDays = platformInfo ? Math.ceil(platformInfo.refreshWindowSeconds / 86400) : 7;
+
+    if (hoursLeft < 0) {
+        return { status: "expired", daysLeft: 0, hoursLeft: 0, message: "Token expired" };
+    } else {
+        return { status: "healthy", daysLeft, hoursLeft, message: `Valid for ${daysLeft} days` };
+    }
+}
+
+function getStatusIcon(status: HealthStatus) {
+    switch (status) {
+        case "healthy":
+            return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        case "expired":
+            return <XCircle className="w-5 h-5 text-destructive" />;
+        case "needs_reauth":
+            return <RefreshCw className="w-5 h-5 text-red-600" />;
+        default:
+            return <Clock className="w-5 h-5 text-muted-foreground" />;
+    }
+}
+
+function getStatusBadge(status: HealthStatus) {
+    const variants: Record<HealthStatus, { variant: "default" | "secondary" | "destructive" | "outline"; className: string }> = {
+        healthy: { variant: "default", className: "bg-green-500/10 text-green-500 border-green-500/30 hover:bg-green-500/20" },
+        expired: { variant: "destructive", className: "" },
+        needs_reauth: { variant: "destructive", className: "bg-red-600/10 text-red-600 border-red-600/30" },
+        unknown: { variant: "secondary", className: "" },
+    };
+
+    const labels: Record<HealthStatus, string> = {
+        healthy: "Active",
+        expired: "Expired",
+        needs_reauth: "Needs Reconnect",
+        unknown: "Unknown",
+    };
+
+    return (
+        <Badge variant={variants[status].variant} className={variants[status].className}>
+            {labels[status]}
+        </Badge>
+    );
+}
+
+export default function ConnectionHealth() {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+    const [testingAccountId, setTestingAccountId] = useState<string | null>(null);
+    const [refreshingAccountId, setRefreshingAccountId] = useState<string | null>(null);
+    const [isSendingTestNotification, setIsSendingTestNotification] = useState(false);
+    const { handleConnectPlatform, connectingPlatform } = useProfileOAuth();
+
+    const { data: accounts = [], isLoading } = useQuery({
+        queryKey: ["connection_health", user?.id],
+        queryFn: async () => {
+            if (!user) return [];
+
+            const { data, error } = await supabase
+                .from("social_accounts")
+                .select("id, platform, platform_username, avatar_url, token_expires_at, updated_at, connected_at, is_active, needs_reauth, failure_count, last_refresh_error, social_profile_id")
+                .eq("user_id", user.id)
+                .eq("is_active", true)
+                .order("platform", { ascending: true });
+
+            if (error) throw error;
+            return (data || []) as SocialAccountHealth[];
+        },
+        enabled: !!user,
+    });
+
+    const testConnectionMutation = useMutation({
+        mutationFn: async (accountId: string) => {
+            setTestingAccountId(accountId);
+            const { data, error } = await supabase.functions.invoke("check-connection-health", {
+                body: { account_id: accountId, action: "test" },
+            });
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (data) => {
+            toast({
+                title: data.success ? "Connection Working" : "Connection Issue",
+                description: data.message || (data.success ? "API connection is healthy" : "Failed to verify connection"),
+                variant: data.success ? "default" : "destructive",
+            });
+        },
+        onError: (error) => {
+            toast({
+                title: "Test Failed",
+                description: error instanceof Error ? error.message : "Failed to test connection",
+                variant: "destructive",
+            });
+        },
+        onSettled: () => {
+            setTestingAccountId(null);
+        },
+    });
+
+    const refreshTokenMutation = useMutation({
+        mutationFn: async (accountId: string) => {
+            setRefreshingAccountId(accountId);
+            const account = accounts.find(a => a.id === accountId);
+            if (!account) throw new Error("Account not found");
+
+            const { data, error } = await supabase.functions.invoke(`${account.platform}-oauth`, {
+                body: { action: "refresh", account_id: accountId },
+            });
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: () => {
+            toast({
+                title: "Token Refreshed",
+                description: "Access token has been refreshed successfully.",
+            });
+            queryClient.invalidateQueries({ queryKey: ["connection_health"] });
+        },
+        onError: (error) => {
+            toast({
+                title: "Refresh Failed",
+                description: error instanceof Error ? error.message : "Failed to refresh token",
+                variant: "destructive",
+            });
+        },
+        onSettled: () => {
+            setRefreshingAccountId(null);
+        },
+    });
+
+    const testNotificationMutation = useMutation({
+        mutationFn: async () => {
+            setIsSendingTestNotification(true);
+            const { data, error } = await supabase.functions.invoke("send-token-expiry-notifications");
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (data) => {
+            toast({
+                title: "Notification Check Complete",
+                description: data.message || `Sent ${data.sent || 0} notification email(s)`,
+            });
+        },
+        onError: (error) => {
+            toast({
+                title: "Notification Check Failed",
+                description: error instanceof Error ? error.message : "Failed to run notification check",
+                variant: "destructive",
+            });
+        },
+        onSettled: () => {
+            setIsSendingTestNotification(false);
+        },
+    });
+
+    // Calculate overall health stats
+    const healthStats = accounts.reduce(
+        (acc, account) => {
+            const { status } = getTokenHealth(account.token_expires_at, account.platform, account.needs_reauth);
+            acc[status] = (acc[status] || 0) + 1;
+            acc.total += 1;
+            return acc;
+        },
+        { healthy: 0, expired: 0, unknown: 0, needs_reauth: 0, total: 0 } as Record<string, number>
+    );
+
+    const healthPercentage = healthStats.total > 0
+        ? Math.round((healthStats.healthy / healthStats.total) * 100)
+        : 0;
+
+    return (
+        <DashboardLayout>
+            <div className="space-y-8">
+                {/* Header */}
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold flex items-center gap-3">
+                            <Activity className="w-8 h-8 text-primary" />
+                            Connection Health
+                        </h1>
+                        <p className="text-muted-foreground mt-1">
+                            Monitor the health and status of your connected social accounts.
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => testNotificationMutation.mutate()}
+                            disabled={isSendingTestNotification}
+                        >
+                            {isSendingTestNotification ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Mail className="w-4 h-4" />
+                            )}
+                            Test Notifications
+                        </Button>
+                        <Link to="/docs/token-expiry">
+                            <Button variant="outline" size="sm" className="gap-2">
+                                <Info className="w-4 h-4" />
+                                Token Expiry Guide
+                                <ExternalLink className="w-3 h-3" />
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Health Overview Cards */}
+                <div className="grid md:grid-cols-4 gap-4">
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription>Overall Health</CardDescription>
+                            <CardTitle className="text-3xl">{healthPercentage}%</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Progress value={healthPercentage} className="h-2" />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                Active
+                            </CardDescription>
+                            <CardTitle className="text-3xl text-green-500">{healthStats.healthy}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-xs text-muted-foreground">Tokens valid</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center gap-2">
+                                <XCircle className="w-4 h-4 text-destructive" />
+                                Expired
+                            </CardDescription>
+                            <CardTitle className="text-3xl text-destructive">{healthStats.expired}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-xs text-muted-foreground">Token expired</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center gap-2">
+                                <RotateCcw className="w-4 h-4 text-red-600" />
+                                Needs Reconnect
+                            </CardDescription>
+                            <CardTitle className="text-3xl text-red-600">{healthStats.needs_reauth || 0}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-xs text-muted-foreground">Reconnection required</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Accounts Table */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Shield className="w-5 h-5" />
+                            Connected Accounts
+                        </CardTitle>
+                        <CardDescription>
+                            Check token status and test connections for each platform
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : accounts.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                                No connected accounts. Go to Profiles to connect your social accounts.
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Account</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Token Expiry</TableHead>
+                                        <TableHead>Last Updated</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {accounts.map((account) => {
+                                        const health = getTokenHealth(account.token_expires_at, account.platform, account.needs_reauth);
+                                        const platformInfo = PLATFORM_TOKEN_INFO[account.platform.toLowerCase()];
+
+                                        return (
+                                            <TableRow key={account.id}>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar className="h-9 w-9">
+                                                            {account.avatar_url ? (
+                                                                <AvatarImage src={account.avatar_url} alt={account.platform_username || account.platform} />
+                                                            ) : null}
+                                                            <AvatarFallback>
+                                                                <PlatformIcon platform={account.platform as ExtendedPlatform} size="sm" />
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div>
+                                                            <div className="font-medium">{account.platform_username || "Unknown"}</div>
+                                                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                                                <PlatformIcon platform={account.platform as ExtendedPlatform} size="xs" />
+                                                                {getPlatformName(account.platform as ExtendedPlatform)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2">
+                                                        {getStatusIcon(health.status)}
+                                                        {getStatusBadge(health.status)}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className={`text-sm ${health.status === "expired" ? "text-destructive" : ""}`}>
+                                                            {health.message}
+                                                        </span>
+                                                        {platformInfo && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <button type="button" className="text-xs text-muted-foreground cursor-help hover:underline bg-transparent border-none p-0">
+                                                                        {platformInfo.accessTokenExpiry} access token
+                                                                    </button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Access: {platformInfo.accessTokenExpiry}</p>
+                                                                    <p>Refresh: {platformInfo.refreshTokenExpiry}</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="text-sm text-muted-foreground">
+                                                        {new Date(account.updated_at).toLocaleDateString()}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => testConnectionMutation.mutate(account.id)}
+                                                            disabled={testingAccountId === account.id}
+                                                        >
+                                                            {testingAccountId === account.id ? (
+                                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                            ) : (
+                                                                <Zap className="w-4 h-4" />
+                                                            )}
+                                                            <span className="ml-1.5 hidden sm:inline">Test</span>
+                                                        </Button>
+                                                        {health.status === "expired" || health.status === "needs_reauth" ? (
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                onClick={() => handleConnectPlatform(account.social_profile_id || "", account.platform)}
+                                                                disabled={connectingPlatform === account.platform}
+                                                                className="bg-destructive hover:bg-destructive/90"
+                                                            >
+                                                                {connectingPlatform === account.platform ? (
+                                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                                ) : (
+                                                                    <RotateCcw className="w-4 h-4" />
+                                                                )}
+                                                                <span className="ml-1.5 hidden sm:inline">Reconnect</span>
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => refreshTokenMutation.mutate(account.id)}
+                                                                disabled={refreshingAccountId === account.id}
+                                                            >
+                                                                {refreshingAccountId === account.id ? (
+                                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                                ) : (
+                                                                    <RefreshCw className="w-4 h-4" />
+                                                                )}
+                                                                <span className="ml-1.5 hidden sm:inline">Refresh</span>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </DashboardLayout>
+    );
+}

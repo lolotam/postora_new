@@ -1,0 +1,191 @@
+import { useState, useMemo } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { Navigate } from "react-router-dom";
+import { useSocialAccounts } from "@/hooks/useSocialAccounts";
+import { useAdAccounts, useCampaigns, useAccountInsights } from "@/hooks/useAdAnalytics";
+import { AdInsightsChart } from "@/components/ads/AdInsightsChart";
+import { CampaignTable } from "@/components/ads/CampaignTable";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { BarChart3, Loader2, TrendingUp, Eye, MousePointerClick, DollarSign } from "lucide-react";
+import { Icon3D, GradientHeading, GradientRingCard, GradientDivider, Reveal } from "@/components/fx";
+import type { GradientKey } from "@/components/fx";
+
+const DATE_PRESETS = [
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "last_7d", label: "Last 7 days" },
+  { value: "last_14d", label: "Last 14 days" },
+  { value: "last_30d", label: "Last 30 days" },
+  { value: "last_90d", label: "Last 90 days" },
+];
+
+export default function AdAnalytics() {
+  const { flags, isLoading: flagsLoading } = useFeatureFlags();
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedAdAccountId, setSelectedAdAccountId] = useState<string | null>(null);
+  const [datePreset, setDatePreset] = useState("last_30d");
+
+  const { data: socialAccounts = [] } = useSocialAccounts();
+  const fbAccounts = useMemo(
+    () => socialAccounts.filter((a) => a.platform === "facebook" && a.is_active),
+    [socialAccounts]
+  );
+
+  const activeAccountId = selectedAccountId || fbAccounts[0]?.id || null;
+  const { data: adAccounts = [], isLoading: adAccountsLoading } = useAdAccounts(activeAccountId);
+  const activeAdAccountId = selectedAdAccountId || adAccounts[0]?.id || null;
+  const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns(activeAccountId, activeAdAccountId, datePreset);
+  const { data: insights = [], isLoading: insightsLoading } = useAccountInsights(activeAccountId, activeAdAccountId, datePreset);
+
+  if (!flagsLoading && !flags.adAnalytics) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Summary metrics
+  const totals = useMemo(() => {
+    return insights.reduce(
+      (acc, d) => ({
+        spend: acc.spend + parseFloat(d.spend || "0"),
+        impressions: acc.impressions + parseFloat(d.impressions || "0"),
+        clicks: acc.clicks + parseFloat(d.clicks || "0"),
+        reach: acc.reach + parseFloat(d.reach || "0"),
+      }),
+      { spend: 0, impressions: 0, clicks: 0, reach: 0 }
+    );
+  }, [insights]);
+
+  const isLoading = adAccountsLoading || campaignsLoading || insightsLoading;
+
+  return (
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <Reveal>
+          <div className="group flex items-center gap-4">
+            <Icon3D icon={BarChart3} variant="sky" size="md" />
+            <div className="flex-1 min-w-0">
+              <GradientHeading preset="sky-violet" size="lg" as="h1">Ad Analytics</GradientHeading>
+              <p className="text-sm text-muted-foreground mt-1">Facebook & Instagram ad performance</p>
+            </div>
+          </div>
+        </Reveal>
+        <GradientDivider tone="sky" />
+
+        {/* Controls */}
+        <Reveal delay={80}>
+        <GradientRingCard variant="sky" padded={false} hoverLift={false} ringIntensity="subtle" innerClassName="p-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          {fbAccounts.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground">Facebook Account</span>
+              <Select value={activeAccountId || ""} onValueChange={setSelectedAccountId}>
+                <SelectTrigger className="w-[200px] h-9">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fbAccounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.platform_username || a.platform_user_id}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {adAccounts.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground">Ad Account</span>
+              <Select value={activeAdAccountId || ""} onValueChange={setSelectedAdAccountId}>
+                <SelectTrigger className="w-[220px] h-9">
+                  <SelectValue placeholder="Select ad account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {adAccounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name} ({a.id})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <span className="text-xs text-muted-foreground">Date Range</span>
+            <Select value={datePreset} onValueChange={setDatePreset}>
+              <SelectTrigger className="w-[160px] h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_PRESETS.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        </GradientRingCard>
+        </Reveal>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md">
+            <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+          </div>
+        ) : fbAccounts.length === 0 ? (
+          <Reveal delay={120}>
+            <GradientRingCard variant="sky" hoverLift={false} ringIntensity="subtle">
+              <div className="flex flex-col items-center text-center py-6 space-y-3">
+                <div className="group"><Icon3D icon={BarChart3} variant="sky" size="lg" /></div>
+                <p className="font-medium mt-1">No Facebook accounts connected</p>
+                <p className="text-sm text-muted-foreground">Connect a Facebook account to view ad analytics.</p>
+              </div>
+            </GradientRingCard>
+          </Reveal>
+        ) : (
+          <>
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {([
+                { label: "Total Spend", value: `$${totals.spend.toFixed(2)}`, icon: DollarSign, variant: "emerald" as GradientKey },
+                { label: "Impressions", value: totals.impressions.toLocaleString(), icon: Eye, variant: "sky" as GradientKey },
+                { label: "Clicks", value: totals.clicks.toLocaleString(), icon: MousePointerClick, variant: "violet" as GradientKey },
+                { label: "Avg CTR", value: totals.impressions > 0 ? `${((totals.clicks / totals.impressions) * 100).toFixed(2)}%` : "0%", icon: TrendingUp, variant: "amber" as GradientKey },
+              ]).map((m, i) => (
+                <Reveal key={m.label} delay={i * 60}>
+                  <div className="group rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md p-4 flex items-center gap-3 transition-transform hover:-translate-y-0.5">
+                    <Icon3D icon={m.icon} variant={m.variant} size="sm" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">{m.label}</p>
+                      <p className="text-lg font-semibold tabular-nums">{m.value}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+
+            {/* Charts */}
+            {insights.length > 0 && (
+              <div className="grid md:grid-cols-2 gap-4">
+                {(["spend", "impressions", "clicks", "ctr"] as const).map((metric, i) => (
+                  <Reveal key={metric} delay={i * 60}>
+                    <GradientRingCard variant="sky" padded={false} ringIntensity="subtle" innerClassName="p-4">
+                      <AdInsightsChart insights={insights} metric={metric} />
+                    </GradientRingCard>
+                  </Reveal>
+                ))}
+              </div>
+            )}
+
+            {/* Campaign table */}
+            <Reveal delay={200}>
+              <GradientRingCard variant="sky" padded={false} hoverLift={false} ringIntensity="subtle" innerClassName="p-4 md:p-5">
+                <div className="flex items-center gap-2 text-base font-semibold mb-3">
+                  <BarChart3 className="h-4 w-4 text-sky-500" />
+                  Campaigns
+                </div>
+                <CampaignTable campaigns={campaigns} />
+              </GradientRingCard>
+            </Reveal>
+          </>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}

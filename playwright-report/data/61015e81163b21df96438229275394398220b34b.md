@@ -1,0 +1,82 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region "Notifications (F8)":
+      - list [ref=e4]:
+        - status [ref=e5]:
+          - generic [ref=e6]:
+            - generic [ref=e7]: Sign in failed
+            - generic [ref=e8]: Invalid login credentials
+          - button [ref=e9] [cursor=pointer]:
+            - img [ref=e10]
+    - region "Notifications alt+T"
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - link "Back to home" [ref=e16] [cursor=pointer]:
+          - /url: /
+          - img [ref=e17]
+          - text: Back to home
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - img [ref=e24]
+            - generic [ref=e27]: Postora
+          - heading "Manage all your social media in one place." [level=1] [ref=e28]
+          - paragraph [ref=e29]: Connect your accounts, create stunning content, and reach your audience everywhere—effortlessly.
+        - paragraph [ref=e30]: Trusted by 10,000+ content creators worldwide
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - heading "Welcome back" [level=2] [ref=e35]
+            - paragraph [ref=e36]: Sign in to continue to Postora
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - text: Email
+              - textbox "Email" [ref=e39]:
+                - /placeholder: you@example.com
+                - text: invalid@example.com
+            - generic [ref=e40]:
+              - generic [ref=e41]:
+                - generic [ref=e42]: Password
+                - button "Forgot password?" [ref=e43] [cursor=pointer]
+              - generic [ref=e44]:
+                - textbox "Password" [ref=e45]:
+                  - /placeholder: ••••••••
+                  - text: wrongpassword
+                - button [ref=e46] [cursor=pointer]:
+                  - img [ref=e47]
+            - button "Sign In" [ref=e50] [cursor=pointer]
+          - generic [ref=e55]: Or continue with
+          - button "Continue with Google" [ref=e56] [cursor=pointer]:
+            - img
+            - text: Continue with Google
+          - paragraph [ref=e58]:
+            - text: Don't have an account?
+            - link "Sign up" [ref=e59] [cursor=pointer]:
+              - /url: /auth?mode=signup
+        - paragraph [ref=e60]:
+          - text: By continuing, you agree to our
+          - link "Terms of Service" [ref=e61] [cursor=pointer]:
+            - /url: /terms
+          - text: and
+          - link "Privacy Policy" [ref=e62] [cursor=pointer]:
+            - /url: /privacy
+          - text: .
+      - generic [ref=e65]:
+        - button "Dismiss cookie notice" [ref=e66] [cursor=pointer]:
+          - img [ref=e67]
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - img [ref=e73]
+            - generic [ref=e75]:
+              - heading "We use cookies 🍪" [level=3] [ref=e76]
+              - paragraph [ref=e77]:
+                - text: We use cookies to enhance your experience, remember your preferences, and enable social media integrations. You can customize your preferences or accept all cookies.
+                - link "Learn more" [ref=e78] [cursor=pointer]:
+                  - /url: /cookies
+          - generic [ref=e79]:
+            - button "Essential Only" [ref=e80] [cursor=pointer]
+            - button "Accept All" [ref=e81] [cursor=pointer]
+  - status [ref=e82]: Notification Sign in failedInvalid login credentials
+```

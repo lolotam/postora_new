@@ -1,0 +1,308 @@
+{
+  "name": "Postora - Failure Alerts (Slack + Email)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "postora-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Receive Postora Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "postora-alerts"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"received\": true, \"event\": \"{{ $json.event }}\" }",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-failed",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "post.failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "check-if-failed",
+      "name": "Is Post Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "post",
+        "channel": {
+          "__rl": true,
+          "value": "#social-media-alerts",
+          "mode": "name"
+        },
+        "messageType": "block",
+        "blocksUi": {
+          "blocks": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "🚨 Social Media Post Failed",
+                "emoji": true
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Post ID:* {{ $json.data.post_id }}\n*Timestamp:* {{ $json.timestamp }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Caption:*\n{{ $json.data.caption || 'No caption' }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Platforms:* {{ $json.data.platforms.join(', ') }}"
+              }
+            },
+            {
+              "type": "divider"
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Platform Results:*\n{{ Object.entries($json.data.platform_results || {}).map(([platform, result]) => `• *${platform}*: ${result.status}`).join('\\n') }}"
+              }
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "View in Postora",
+                    "emoji": true
+                  },
+                  "url": "https://postora.app/history",
+                  "style": "primary"
+                }
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "slack-alert",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [900, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "Slack Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@yourdomain.com",
+        "toEmail": "team@yourdomain.com",
+        "subject": "🚨 Postora: Social Media Post Failed",
+        "emailType": "html",
+        "message": "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }\n    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }\n    .header { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 24px; text-align: center; }\n    .header h1 { margin: 0; font-size: 24px; }\n    .content { padding: 24px; }\n    .field { margin-bottom: 16px; }\n    .label { font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 4px; }\n    .value { font-size: 16px; color: #333; }\n    .caption { background: #f9f9f9; padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; }\n    .platforms { display: flex; gap: 8px; flex-wrap: wrap; }\n    .platform { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 16px; font-size: 14px; }\n    .results { margin-top: 20px; }\n    .result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }\n    .status-failed { color: #ef4444; }\n    .status-success { color: #22c55e; }\n    .footer { background: #f9f9f9; padding: 16px 24px; text-align: center; }\n    .button { display: inline-block; background: #f97316; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🚨 Post Failed</h1>\n    </div>\n    <div class=\"content\">\n      <div class=\"field\">\n        <div class=\"label\">Post ID</div>\n        <div class=\"value\">{{ $json.data.post_id }}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Timestamp</div>\n        <div class=\"value\">{{ $json.timestamp }}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Caption</div>\n        <div class=\"caption\">{{ $json.data.caption || 'No caption provided' }}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Platforms</div>\n        <div class=\"platforms\">\n          {{ $json.data.platforms.map(p => `<span class=\"platform\">${p}</span>`).join('') }}\n        </div>\n      </div>\n      <div class=\"results\">\n        <div class=\"label\">Platform Results</div>\n        {{ Object.entries($json.data.platform_results || {}).map(([platform, result]) => `<div class=\"result-item\"><span>${platform}</span><span class=\"status-${result.status}\">${result.status}</span></div>`).join('') }}\n      </div>\n    </div>\n    <div class=\"footer\">\n      <a href=\"https://postora.app/history\" class=\"button\">View in Postora</a>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "email-alert",
+      "name": "Send Email Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [900, 400],
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_SMTP_CREDENTIAL_ID",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "no-op-success",
+      "name": "Success (No Alert)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 550]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-completed",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "post.completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "check-if-success",
+      "name": "Is Post Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "operation": "post",
+        "channel": {
+          "__rl": true,
+          "value": "#social-media-posts",
+          "mode": "name"
+        },
+        "messageType": "block",
+        "blocksUi": {
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "✅ *Post Published Successfully*\n\n*Platforms:* {{ $json.data.platforms.join(', ') }}\n*Caption:* {{ ($json.data.caption || '').substring(0, 100) }}{{ ($json.data.caption || '').length > 100 ? '...' : '' }}"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "slack-success",
+      "name": "Send Success to Slack (Optional)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [900, 700],
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "Slack Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Receive Postora Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Post Failed?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Post Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Post Failed?": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Is Post Completed?": {
+      "main": [
+        [
+          {
+            "node": "Send Success to Slack (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Success (No Alert)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "postora-template"
+  },
+  "pinData": {},
+  "versionId": "2.0.0",
+  "triggerCount": 0
+}

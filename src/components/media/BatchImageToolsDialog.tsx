@@ -1,0 +1,750 @@
+import { useState, useRef, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Loader2,
+  Scissors,
+  Maximize2,
+  Wand2,
+  Palette,
+  Sparkles,
+  Sun,
+  Contrast,
+  Droplets,
+  CircleDot,
+  ZoomIn,
+  Focus,
+  Eraser,
+  Image,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface BatchFile {
+  id: string;
+  publicUrl: string;
+  cloudinary_public_id?: string;
+  storage_bucket: string;
+  folder_path?: string;
+  file_path: string;
+}
+
+interface BatchImageToolsDialogProps {
+  open: boolean;
+  onClose: () => void;
+  files: BatchFile[];
+  cloudName: string;
+  onProcessComplete?: () => void;
+}
+
+type EdgeMode = "none" | "fine";
+type ResizeMode = "original" | "square" | "portrait" | "landscape";
+type CropMode = "fill" | "fit" | "scale" | "crop" | "pad";
+type ArtisticFilter = "none" | "al_dente" | "athena" | "audrey" | "aurora" | "daguerre" | "eucalyptus" | "fes" | "frost" | "hairspray" | "hokusai" | "incognito" | "linen" | "peacock" | "primavera" | "quartz" | "red_rock" | "refresh" | "sizzle" | "sonnet" | "ukulele" | "zorro";
+
+type ProcessStatus = "pending" | "processing" | "success" | "error";
+
+interface FileProcessState {
+  id: string;
+  fileName: string;
+  status: ProcessStatus;
+  error?: string;
+}
+
+const RESIZE_PRESETS: Record<ResizeMode, { label: string; width: number | null; height: number | null }> = {
+  original: { label: "Original", width: null, height: null },
+  square: { label: "Square (1:1)", width: 1024, height: 1024 },
+  portrait: { label: "Portrait (4:5)", width: 1080, height: 1350 },
+  landscape: { label: "Landscape (16:9)", width: 1920, height: 1080 },
+};
+
+const ARTISTIC_FILTERS: Record<ArtisticFilter, string> = {
+  none: "None",
+  al_dente: "Al Dente",
+  athena: "Athena",
+  audrey: "Audrey",
+  aurora: "Aurora",
+  daguerre: "Daguerre",
+  eucalyptus: "Eucalyptus",
+  fes: "Fes",
+  frost: "Frost",
+  hairspray: "Hairspray",
+  hokusai: "Hokusai",
+  incognito: "Incognito",
+  linen: "Linen",
+  peacock: "Peacock",
+  primavera: "Primavera",
+  quartz: "Quartz",
+  red_rock: "Red Rock",
+  refresh: "Refresh",
+  sizzle: "Sizzle",
+  sonnet: "Sonnet",
+  ukulele: "Ukulele",
+  zorro: "Zorro",
+};
+
+const QUALITY_PRESETS = {
+  auto: { label: "Auto (recommended)", value: "auto" },
+  best: { label: "Best Quality", value: "100" },
+  high: { label: "High (80%)", value: "80" },
+  medium: { label: "Medium (60%)", value: "60" },
+};
+
+export function BatchImageToolsDialog({
+  open,
+  onClose,
+  files,
+  cloudName,
+  onProcessComplete,
+}: BatchImageToolsDialogProps) {
+  const [processing, setProcessing] = useState(false);
+  const [fileStates, setFileStates] = useState<FileProcessState[]>([]);
+  
+  // Feature toggles
+  const [enableBgRemoval, setEnableBgRemoval] = useState(false);
+  const [enableResize, setEnableResize] = useState(false);
+  const [enableUpscale, setEnableUpscale] = useState(false);
+  const [enableFilters, setEnableFilters] = useState(false);
+  const [enableQuality, setEnableQuality] = useState(false);
+  
+  // Background removal options
+  const [edgeMode, setEdgeMode] = useState<EdgeMode>("none");
+  
+  // Resize options
+  const [resizeMode, setResizeMode] = useState<ResizeMode>("square");
+  const [cropMode, setCropMode] = useState<CropMode>("fill");
+  
+  // Filter options
+  const [brightness, setBrightness] = useState(0);
+  const [contrast, setContrast] = useState(0);
+  const [saturation, setSaturation] = useState(0);
+  const [blur, setBlur] = useState(0);
+  const [sharpening, setSharpening] = useState(0);
+  const [noiseReduction, setNoiseReduction] = useState(0);
+  const [artisticFilter, setArtisticFilter] = useState<ArtisticFilter>("none");
+  
+  // Upscale options
+  const [upscaleMode, setUpscaleMode] = useState<"standard" | "enhance" | "restore">("standard");
+  
+  // Quality options
+  const [qualityPreset, setQualityPreset] = useState<keyof typeof QUALITY_PRESETS>("auto");
+  const [outputFormat, setOutputFormat] = useState<"auto" | "jpg" | "png" | "webp">("auto");
+  
+  const { toast } = useToast();
+
+  // Reset state when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setFileStates(files.map(f => ({
+        id: f.id,
+        fileName: f.file_path.split("/").pop() || "file",
+        status: "pending" as ProcessStatus,
+      })));
+      setEnableBgRemoval(false);
+      setEnableResize(false);
+      setEnableUpscale(false);
+      setEnableFilters(false);
+      setEnableQuality(false);
+      setEdgeMode("none");
+      setResizeMode("square");
+      setCropMode("fill");
+      setBrightness(0);
+      setContrast(0);
+      setSaturation(0);
+      setBlur(0);
+      setSharpening(0);
+      setNoiseReduction(0);
+      setArtisticFilter("none");
+      setUpscaleMode("standard");
+      setQualityPreset("auto");
+      setOutputFormat("auto");
+    }
+  }, [open, files]);
+
+  const hasFilterModifications = brightness !== 0 || contrast !== 0 || saturation !== 0 || blur > 0 || sharpening > 0 || noiseReduction > 0 || artisticFilter !== "none";
+
+  const buildCloudinaryUrl = (publicId: string, targetCloudName: string) => {
+    const transformations: string[] = [];
+
+    // Add resize FIRST
+    if (enableResize && resizeMode !== "original") {
+      const preset = RESIZE_PRESETS[resizeMode];
+      if (preset.width && preset.height) {
+        transformations.push(`w_${preset.width},h_${preset.height},c_${cropMode}`);
+      }
+    }
+
+    // Add background removal
+    if (enableBgRemoval) {
+      if (edgeMode === "fine") {
+        transformations.push("e_background_removal:fineedges_y");
+      } else {
+        transformations.push("e_background_removal");
+      }
+    }
+    
+    // Add upscale
+    if (enableUpscale) {
+      if (upscaleMode === "enhance") {
+        transformations.push("e_upscale");
+        transformations.push("e_enhance");
+      } else if (upscaleMode === "restore") {
+        transformations.push("e_upscale");
+        transformations.push("e_gen_restore");
+      } else {
+        transformations.push("e_upscale");
+      }
+    }
+    
+    // Add filters and effects
+    if (enableFilters && hasFilterModifications) {
+      const filterParts: string[] = [];
+      
+      if (brightness !== 0) filterParts.push(`e_brightness:${brightness}`);
+      if (contrast !== 0) filterParts.push(`e_contrast:${contrast}`);
+      if (saturation !== 0) filterParts.push(`e_saturation:${saturation}`);
+      if (blur > 0) filterParts.push(`e_blur:${blur * 10}`);
+      if (sharpening > 0) filterParts.push(`e_sharpen:${Math.round(sharpening * 10)}`);
+      if (noiseReduction > 0) filterParts.push(`e_improve:indoor:${Math.round(noiseReduction)}`);
+      if (artisticFilter !== "none") filterParts.push(`e_art:${artisticFilter}`);
+      
+      if (filterParts.length > 0) {
+        transformations.push(filterParts.join(","));
+      }
+    }
+    
+    // Add quality settings
+    if (enableQuality) {
+      const qualityParts: string[] = [];
+      if (qualityPreset === "auto") {
+        qualityParts.push("q_auto");
+      } else {
+        qualityParts.push(`q_${QUALITY_PRESETS[qualityPreset].value}`);
+      }
+      if (outputFormat !== "auto") {
+        qualityParts.push(`f_${outputFormat}`);
+      } else {
+        qualityParts.push("f_auto");
+      }
+      if (qualityParts.length > 0) {
+        transformations.push(qualityParts.join(","));
+      }
+    }
+
+    const transformString = transformations.join("/");
+    return `https://res.cloudinary.com/${targetCloudName}/image/upload/${transformString}/${publicId}`;
+  };
+
+  const uploadToCloudinary = async (file: BatchFile): Promise<{ publicId: string; cloudName: string; url: string }> => {
+    const response = await fetch(file.publicUrl);
+    const blob = await response.blob();
+
+    const reader = new FileReader();
+    const base64Promise = new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const base64Data = await base64Promise;
+
+    const fileName = file.file_path.split("/").pop() || `image-${Date.now()}`;
+
+    const { data, error } = await supabase.functions.invoke("cloudinary-upload", {
+      body: {
+        fileData: base64Data,
+        fileName: fileName,
+        fileType: "image",
+      },
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || "Upload failed");
+
+    const urlMatch = data.url.match(/res\.cloudinary\.com\/([^\/]+)/);
+    const extractedCloudName = urlMatch ? urlMatch[1] : "";
+
+    return {
+      publicId: data.publicId,
+      cloudName: extractedCloudName,
+      url: data.url,
+    };
+  };
+
+  const processFile = async (file: BatchFile): Promise<void> => {
+    const isCloudinaryFile = file.storage_bucket === "cloudinary" && !!file.cloudinary_public_id;
+    
+    let publicId: string;
+    let targetCloudName: string;
+
+    if (isCloudinaryFile) {
+      publicId = file.cloudinary_public_id!;
+      targetCloudName = cloudName;
+    } else {
+      const uploadResult = await uploadToCloudinary(file);
+      publicId = uploadResult.publicId;
+      targetCloudName = uploadResult.cloudName;
+    }
+
+    const processedUrl = buildCloudinaryUrl(publicId, targetCloudName);
+
+    // Fetch processed image with retry
+    let imageBlob: Blob | null = null;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!imageBlob && attempts < maxAttempts) {
+      const response = await fetch(processedUrl);
+      if (response.ok) {
+        imageBlob = await response.blob();
+        break;
+      }
+      if (response.status === 423) {
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } else {
+        throw new Error(`Failed to fetch processed image: ${response.status}`);
+      }
+    }
+
+    if (!imageBlob) {
+      throw new Error("Processing timed out");
+    }
+
+    // Convert to base64 and upload
+    const reader = new FileReader();
+    const base64Promise = new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(imageBlob!);
+    });
+    const base64Data = await base64Promise;
+
+    const originalName = file.file_path.split("/").pop()?.replace(/\.[^.]+$/, "") || "processed";
+    const suffix = [
+      enableBgRemoval && "bg-removed",
+      enableResize && resizeMode !== "original" && resizeMode,
+      enableUpscale && "upscaled",
+      enableFilters && hasFilterModifications && "filtered",
+    ].filter(Boolean).join("-");
+    
+    const newFileName = `${originalName}_${suffix || "processed"}_${Date.now()}.png`;
+
+    const { data: uploadData, error: uploadError } = await supabase.functions.invoke("cloudinary-upload", {
+      body: {
+        fileData: base64Data,
+        fileName: newFileName,
+        fileType: "image",
+      },
+    });
+
+    if (uploadError) throw uploadError;
+    if (!uploadData?.success) throw new Error(uploadData?.error || "Upload failed");
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+
+    const urlMatch = uploadData.url.match(/res\.cloudinary\.com\/([^\/]+)/);
+    const savedCloudName = urlMatch ? urlMatch[1] : "";
+
+    await supabase.from("media_files").insert({
+      user_id: user.id,
+      file_path: uploadData.url, // Use full URL for consistent display
+      file_type: "image",
+      file_size: imageBlob.size,
+      storage_bucket: "cloudinary",
+      cloudinary_public_id: uploadData.publicId,
+      folder_path: file.folder_path,
+      metadata: {
+        cloudinary_url: uploadData.url,
+        cloud_name: savedCloudName,
+        batch_processed: true,
+        original_file_id: file.id,
+        original_file_name: newFileName,
+      },
+    });
+  };
+
+  const handleProcess = async () => {
+    const hasValidResize = enableResize && resizeMode !== "original";
+    const hasValidFilters = enableFilters && hasFilterModifications;
+    
+    if (!enableBgRemoval && !hasValidResize && !enableUpscale && !hasValidFilters && !enableQuality) {
+      toast({
+        title: "No features selected",
+        description: "Please enable at least one transformation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProcessing(true);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      setFileStates(prev => prev.map(fs => 
+        fs.id === file.id ? { ...fs, status: "processing" } : fs
+      ));
+
+      try {
+        await processFile(file);
+        setFileStates(prev => prev.map(fs => 
+          fs.id === file.id ? { ...fs, status: "success" } : fs
+        ));
+      } catch (error) {
+        console.error(`Error processing ${file.file_path}:`, error);
+        setFileStates(prev => prev.map(fs => 
+          fs.id === file.id ? { 
+            ...fs, 
+            status: "error", 
+            error: error instanceof Error ? error.message : "Unknown error" 
+          } : fs
+        ));
+      }
+    }
+
+    setProcessing(false);
+    
+    const successCount = fileStates.filter(fs => fs.status === "success").length + 1;
+    toast({
+      title: "Batch processing complete",
+      description: `Successfully processed ${successCount} of ${files.length} images`,
+    });
+    
+    onProcessComplete?.();
+  };
+
+  const completedCount = fileStates.filter(fs => fs.status === "success").length;
+  const errorCount = fileStates.filter(fs => fs.status === "error").length;
+  const processingIndex = fileStates.findIndex(fs => fs.status === "processing");
+
+  const getStatusIcon = (status: ProcessStatus) => {
+    switch (status) {
+      case "pending": return <Clock className="w-4 h-4 text-muted-foreground" />;
+      case "processing": return <Loader2 className="w-4 h-4 text-primary animate-spin" />;
+      case "success": return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+      case "error": return <XCircle className="w-4 h-4 text-destructive" />;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && !processing && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wand2 className="w-5 h-5" />
+            Batch Image Processing ({files.length} images)
+          </DialogTitle>
+          <DialogDescription>
+            Apply the same transformations to all selected images.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          {/* Feature Toggles */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center justify-between p-2 border rounded-md bg-background">
+              <div className="flex items-center gap-1.5">
+                <Scissors className="w-3.5 h-3.5 text-primary" />
+                <Label className="text-[11px] font-medium">BG Remove</Label>
+              </div>
+              <Switch
+                checked={enableBgRemoval}
+                onCheckedChange={setEnableBgRemoval}
+                disabled={processing}
+                className="scale-75"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-2 border rounded-md bg-background">
+              <div className="flex items-center gap-1.5">
+                <Maximize2 className="w-3.5 h-3.5 text-primary" />
+                <Label className="text-[11px] font-medium">Resize</Label>
+              </div>
+              <Switch
+                checked={enableResize}
+                onCheckedChange={setEnableResize}
+                disabled={processing}
+                className="scale-75"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-2 border rounded-md bg-background">
+              <div className="flex items-center gap-1.5">
+                <ZoomIn className="w-3.5 h-3.5 text-primary" />
+                <Label className="text-[11px] font-medium">Upscale</Label>
+              </div>
+              <Switch
+                checked={enableUpscale}
+                onCheckedChange={setEnableUpscale}
+                disabled={processing}
+                className="scale-75"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-2 border rounded-md bg-background">
+              <div className="flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5 text-primary" />
+                <Label className="text-[11px] font-medium">Filters</Label>
+              </div>
+              <Switch
+                checked={enableFilters}
+                onCheckedChange={setEnableFilters}
+                disabled={processing}
+                className="scale-75"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-2 border rounded-md bg-background">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <Label className="text-[11px] font-medium">Quality</Label>
+              </div>
+              <Switch
+                checked={enableQuality}
+                onCheckedChange={setEnableQuality}
+                disabled={processing}
+                className="scale-75"
+              />
+            </div>
+          </div>
+
+          {/* Options Panels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left column - BG Removal, Resize, Upscale */}
+            <div className="space-y-4">
+              {enableBgRemoval && (
+                <div className="p-3 border rounded-lg space-y-2">
+                  <Label className="text-xs font-medium">Edge Quality</Label>
+                  <Select value={edgeMode} onValueChange={(v) => setEdgeMode(v as EdgeMode)} disabled={processing}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Standard</SelectItem>
+                      <SelectItem value="fine">Fine Edges</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {enableResize && (
+                <div className="p-3 border rounded-lg space-y-2">
+                  <Label className="text-xs font-medium">Resize Preset</Label>
+                  <Select value={resizeMode} onValueChange={(v) => setResizeMode(v as ResizeMode)} disabled={processing}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(RESIZE_PRESETS).map(([key, { label }]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={cropMode} onValueChange={(v) => setCropMode(v as CropMode)} disabled={processing}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fill">Fill</SelectItem>
+                      <SelectItem value="fit">Fit</SelectItem>
+                      <SelectItem value="scale">Scale</SelectItem>
+                      <SelectItem value="crop">Crop</SelectItem>
+                      <SelectItem value="pad">Pad</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {enableUpscale && (
+                <div className="p-3 border rounded-lg space-y-2">
+                  <Label className="text-xs font-medium">Upscale Mode</Label>
+                  <Select value={upscaleMode} onValueChange={(v) => setUpscaleMode(v as any)} disabled={processing}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="enhance">Upscale + Enhance</SelectItem>
+                      <SelectItem value="restore">Upscale + Restore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {enableQuality && (
+                <div className="p-3 border rounded-lg space-y-2">
+                  <Label className="text-xs font-medium">Quality & Format</Label>
+                  <Select value={qualityPreset} onValueChange={(v) => setQualityPreset(v as any)} disabled={processing}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(QUALITY_PRESETS).map(([key, { label }]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={outputFormat} onValueChange={(v) => setOutputFormat(v as any)} disabled={processing}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto</SelectItem>
+                      <SelectItem value="jpg">JPG</SelectItem>
+                      <SelectItem value="png">PNG</SelectItem>
+                      <SelectItem value="webp">WebP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {/* Right column - Filters */}
+            <div className="space-y-4">
+              {enableFilters && (
+                <div className="p-3 border rounded-lg space-y-3">
+                  <Label className="text-xs font-medium">Filters & Effects</Label>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs flex items-center gap-1"><Sun className="w-3 h-3" /> Brightness</span>
+                      <span className="text-xs text-muted-foreground">{brightness}</span>
+                    </div>
+                    <Slider value={[brightness]} onValueChange={([v]) => setBrightness(v)} min={-100} max={100} disabled={processing} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs flex items-center gap-1"><Contrast className="w-3 h-3" /> Contrast</span>
+                      <span className="text-xs text-muted-foreground">{contrast}</span>
+                    </div>
+                    <Slider value={[contrast]} onValueChange={([v]) => setContrast(v)} min={-100} max={100} disabled={processing} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs flex items-center gap-1"><Droplets className="w-3 h-3" /> Saturation</span>
+                      <span className="text-xs text-muted-foreground">{saturation}</span>
+                    </div>
+                    <Slider value={[saturation]} onValueChange={([v]) => setSaturation(v)} min={-100} max={100} disabled={processing} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs flex items-center gap-1"><Focus className="w-3 h-3" /> Sharpening</span>
+                      <span className="text-xs text-muted-foreground">{sharpening}</span>
+                    </div>
+                    <Slider value={[sharpening]} onValueChange={([v]) => setSharpening(v)} min={0} max={100} disabled={processing} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs flex items-center gap-1"><Eraser className="w-3 h-3" /> Noise Reduction</span>
+                      <span className="text-xs text-muted-foreground">{noiseReduction}</span>
+                    </div>
+                    <Slider value={[noiseReduction]} onValueChange={([v]) => setNoiseReduction(v)} min={0} max={100} disabled={processing} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-xs">Artistic Filter</span>
+                    <Select value={artisticFilter} onValueChange={(v) => setArtisticFilter(v as ArtisticFilter)} disabled={processing}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(ARTISTIC_FILTERS).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Processing Status */}
+          {processing && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span>Processing {processingIndex + 1} of {files.length}...</span>
+                <span className="text-muted-foreground">{completedCount} completed, {errorCount} failed</span>
+              </div>
+              <Progress value={(completedCount / files.length) * 100} className="h-2" />
+            </div>
+          )}
+
+          {/* File List */}
+          <div className="border rounded-lg">
+            <div className="p-2 border-b bg-muted/50">
+              <span className="text-xs font-medium">Files to process</span>
+            </div>
+            <ScrollArea className="h-40">
+              <div className="p-2 space-y-1">
+                {fileStates.map((fs) => (
+                  <div 
+                    key={fs.id} 
+                    className={cn(
+                      "flex items-center gap-2 p-2 rounded text-sm",
+                      fs.status === "processing" && "bg-primary/10",
+                      fs.status === "success" && "bg-green-500/10",
+                      fs.status === "error" && "bg-destructive/10"
+                    )}
+                  >
+                    {getStatusIcon(fs.status)}
+                    <span className="flex-1 truncate">{fs.fileName}</span>
+                    {fs.error && <span className="text-xs text-destructive truncate max-w-[200px]">{fs.error}</span>}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={onClose} disabled={processing}>
+            {processing ? "Processing..." : "Cancel"}
+          </Button>
+          <Button onClick={handleProcess} disabled={processing}>
+            {processing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing {processingIndex + 1}/{files.length}
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4 mr-2" />
+                Process {files.length} Images
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

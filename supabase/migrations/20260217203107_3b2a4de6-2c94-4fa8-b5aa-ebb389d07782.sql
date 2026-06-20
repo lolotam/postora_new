@@ -1,0 +1,1 @@
+UPDATE observability_alert_configs SET threshold_value = 15000, cooldown_minutes = 60, updated_at = now() WHERE name = 'Slow Response Time';

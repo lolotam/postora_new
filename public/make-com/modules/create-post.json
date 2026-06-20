@@ -1,0 +1,269 @@
+{
+  "name": "createPost",
+  "label": "Create Post",
+  "description": "Create and publish a post to one or more social media platforms.",
+  "actionType": "action",
+  "communication": {
+    "url": "{{baseUrl}}/api/v1/post",
+    "method": "POST",
+    "headers": {
+      "x-api-key": "{{connection.apiKey}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "platform": "{{parameters.platform}}",
+      "caption": "{{parameters.caption}}",
+      "media_urls": "{{parameters.mediaUrls}}",
+      "media_base64": "{{parameters.mediaBase64}}",
+      "scheduled_at": "{{parameters.scheduledAt}}",
+      "timezone": "{{parameters.timezone}}",
+      "account_ids": "{{parameters.accountIds}}",
+      "first_comment": "{{parameters.firstComment}}",
+      "instagram_post_type": "{{parameters.instagramPostType}}",
+      "facebook_post_type": "{{parameters.facebookPostType}}",
+      "youtube_title": "{{parameters.youtubeTitle}}",
+      "youtube_privacy": "{{parameters.youtubePrivacy}}",
+      "youtube_category": "{{parameters.youtubeCategory}}",
+      "youtube_tags": "{{parameters.youtubeTags}}",
+      "youtube_as_short": "{{parameters.youtubeAsShort}}",
+      "tiktok_title": "{{parameters.tiktokTitle}}",
+      "tiktok_privacy": "{{parameters.tiktokPrivacy}}",
+      "tiktok_allow_comments": "{{parameters.tiktokAllowComments}}",
+      "tiktok_allow_duet": "{{parameters.tiktokAllowDuet}}",
+      "tiktok_allow_stitch": "{{parameters.tiktokAllowStitch}}",
+      "pinterest_board_id": "{{parameters.pinterestBoardId}}",
+      "pinterest_title": "{{parameters.pinterestTitle}}",
+      "reddit_subreddit": "{{parameters.redditSubreddit}}",
+      "reddit_title": "{{parameters.redditTitle}}"
+    },
+    "response": {
+      "output": "{{body}}"
+    }
+  },
+  "parameters": [
+    {
+      "name": "platform",
+      "type": "select",
+      "label": "Platform",
+      "required": true,
+      "options": [
+        { "label": "Facebook", "value": "facebook" },
+        { "label": "Instagram", "value": "instagram" },
+        { "label": "Threads", "value": "threads" },
+        { "label": "YouTube", "value": "youtube" },
+        { "label": "Pinterest", "value": "pinterest" },
+        { "label": "LinkedIn", "value": "linkedin" },
+        { "label": "X / Twitter", "value": "twitter" },
+        { "label": "TikTok", "value": "tiktok" },
+        { "label": "Bluesky", "value": "bluesky" },
+        { "label": "Reddit", "value": "reddit" }
+      ]
+    },
+    {
+      "name": "caption",
+      "type": "text",
+      "label": "Caption",
+      "required": false,
+      "help": "Post caption/text content. Not used for Stories (media-only).",
+      "multiline": true
+    },
+    {
+      "name": "mediaUrls",
+      "type": "array",
+      "label": "Media URLs",
+      "required": false,
+      "help": "Array of publicly accessible media URLs (images or videos).",
+      "spec": { "type": "text", "label": "URL" }
+    },
+    {
+      "name": "mediaBase64",
+      "type": "array",
+      "label": "Media Base64",
+      "required": false,
+      "help": "Array of base64-encoded media strings (alternative to URLs).",
+      "spec": { "type": "text", "label": "Base64 String" }
+    },
+    {
+      "name": "accountIds",
+      "type": "text",
+      "label": "Account IDs",
+      "required": false,
+      "help": "Comma-separated social account UUIDs. If empty, uses the first connected account for the platform."
+    },
+    {
+      "name": "firstComment",
+      "type": "text",
+      "label": "First Comment",
+      "required": false,
+      "help": "Automatically post a first comment after publishing (Feed and Reels only)."
+    },
+    {
+      "name": "scheduledAt",
+      "type": "date",
+      "label": "Schedule Date/Time",
+      "required": false,
+      "help": "ISO 8601 datetime. If set, the post will be scheduled instead of posted immediately."
+    },
+    {
+      "name": "timezone",
+      "type": "text",
+      "label": "Timezone",
+      "required": false,
+      "help": "IANA timezone (e.g. America/New_York). Used for interpreting scheduledAt."
+    },
+    {
+      "name": "instagramPostType",
+      "type": "select",
+      "label": "Instagram Post Type",
+      "required": false,
+      "options": [
+        { "label": "Feed Post", "value": "feed" },
+        { "label": "Story", "value": "story" },
+        { "label": "Reel", "value": "reel" }
+      ],
+      "help": "Stories only support a single photo or video — captions, locations, and other settings are ignored."
+    },
+    {
+      "name": "facebookPostType",
+      "type": "select",
+      "label": "Facebook Post Type",
+      "required": false,
+      "options": [
+        { "label": "Feed Post", "value": "feed" },
+        { "label": "Story", "value": "story" },
+        { "label": "Reel", "value": "reel" }
+      ],
+      "help": "Stories only support a single photo or video — captions, locations, and other settings are ignored."
+    },
+    {
+      "name": "youtubeTitle",
+      "type": "text",
+      "label": "YouTube - Video Title",
+      "required": false
+    },
+    {
+      "name": "youtubePrivacy",
+      "type": "select",
+      "label": "YouTube - Privacy",
+      "required": false,
+      "options": [
+        { "label": "Public", "value": "public" },
+        { "label": "Unlisted", "value": "unlisted" },
+        { "label": "Private", "value": "private" }
+      ]
+    },
+    {
+      "name": "youtubeCategory",
+      "type": "select",
+      "label": "YouTube - Category",
+      "required": false,
+      "options": [
+        { "label": "Film & Animation", "value": "1" },
+        { "label": "Autos & Vehicles", "value": "2" },
+        { "label": "Music", "value": "10" },
+        { "label": "Pets & Animals", "value": "15" },
+        { "label": "Sports", "value": "17" },
+        { "label": "Travel & Events", "value": "19" },
+        { "label": "Gaming", "value": "20" },
+        { "label": "People & Blogs", "value": "22" },
+        { "label": "Comedy", "value": "23" },
+        { "label": "Entertainment", "value": "24" },
+        { "label": "News & Politics", "value": "25" },
+        { "label": "Howto & Style", "value": "26" },
+        { "label": "Education", "value": "27" },
+        { "label": "Science & Technology", "value": "28" }
+      ]
+    },
+    {
+      "name": "youtubeTags",
+      "type": "text",
+      "label": "YouTube - Tags",
+      "required": false,
+      "help": "Comma-separated tags for the video."
+    },
+    {
+      "name": "youtubeAsShort",
+      "type": "boolean",
+      "label": "YouTube - Upload as Short",
+      "required": false,
+      "default": false
+    },
+    {
+      "name": "tiktokTitle",
+      "type": "text",
+      "label": "TikTok - Title",
+      "required": false,
+      "help": "Primary text for TikTok (displayed as title)."
+    },
+    {
+      "name": "tiktokPrivacy",
+      "type": "select",
+      "label": "TikTok - Privacy Level",
+      "required": false,
+      "options": [
+        { "label": "Everyone", "value": "PUBLIC_TO_EVERYONE" },
+        { "label": "Friends only", "value": "MUTUAL_FOLLOW_FRIENDS" },
+        { "label": "Followers", "value": "FOLLOWER_OF_CREATOR" },
+        { "label": "Only me", "value": "SELF_ONLY" }
+      ]
+    },
+    {
+      "name": "tiktokAllowComments",
+      "type": "boolean",
+      "label": "TikTok - Allow Comments",
+      "required": false,
+      "default": false
+    },
+    {
+      "name": "tiktokAllowDuet",
+      "type": "boolean",
+      "label": "TikTok - Allow Duet",
+      "required": false,
+      "default": false
+    },
+    {
+      "name": "tiktokAllowStitch",
+      "type": "boolean",
+      "label": "TikTok - Allow Stitch",
+      "required": false,
+      "default": false
+    },
+    {
+      "name": "pinterestBoardId",
+      "type": "text",
+      "label": "Pinterest - Board ID",
+      "required": false
+    },
+    {
+      "name": "pinterestTitle",
+      "type": "text",
+      "label": "Pinterest - Pin Title",
+      "required": false
+    },
+    {
+      "name": "redditSubreddit",
+      "type": "text",
+      "label": "Reddit - Subreddit",
+      "required": false,
+      "help": "Subreddit name without r/ prefix."
+    },
+    {
+      "name": "redditTitle",
+      "type": "text",
+      "label": "Reddit - Post Title",
+      "required": false
+    }
+  ],
+  "interface": [
+    { "name": "success", "type": "boolean" },
+    { "name": "post_id", "type": "text" },
+    { "name": "status", "type": "text" },
+    { "name": "message", "type": "text" },
+    { "name": "platform_results", "type": "collection", "spec": [
+      { "name": "platform", "type": "text" },
+      { "name": "status", "type": "text" },
+      { "name": "post_url", "type": "text" },
+      { "name": "error", "type": "text" }
+    ]}
+  ]
+}

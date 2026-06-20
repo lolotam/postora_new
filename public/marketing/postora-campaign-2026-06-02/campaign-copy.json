@@ -1,0 +1,57 @@
+{
+  "campaign": "Postora Cloud social launch",
+  "website": "https://postora.cloud",
+  "timezone": "Asia/Kuwait",
+  "created_at": "2026-06-02T04:30:00+03:00",
+  "target_platforms": ["instagram", "facebook", "threads"],
+  "posting_plan": [
+    {
+      "post_number": 1,
+      "status": "publish_now",
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-01-schedule-everything.png",
+      "hook": "Still switching tabs just to schedule one post?",
+      "caption": "Meet Postora Cloud: one dashboard to create, schedule, and publish social media posts across Instagram, Facebook, Threads, and more. Plan your content calendar, keep campaigns organized, and save time every week with AI-powered social media management.",
+      "cta": "Start managing your social content at https://postora.cloud",
+      "hashtags": ["#Postora", "#PostoraCloud", "#SocialMediaManagement", "#SocialMediaScheduler", "#ContentCalendar", "#InstagramMarketing", "#FacebookMarketing", "#ThreadsApp", "#AIMarketing", "#CreatorTools", "#DigitalMarketing", "#MarketingAutomation"]
+    },
+    {
+      "post_number": 2,
+      "status": "publish_now",
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-02-ai-captions-hashtags.png",
+      "hook": "Blank caption box? Let AI do the first draft.",
+      "caption": "Postora helps creators, agencies, and businesses generate captions, hashtags, and post ideas faster. Turn a simple idea into platform-ready content, then schedule it from the same workspace.",
+      "cta": "Try smarter content creation at https://postora.cloud",
+      "hashtags": ["#Postora", "#AIContentCreation", "#CaptionGenerator", "#HashtagGenerator", "#SocialMediaTools", "#ContentMarketing", "#InstagramGrowth", "#FacebookPage", "#ThreadsMarketing", "#MarketingAI", "#SmallBusinessMarketing", "#CreatorWorkflow"]
+    },
+    {
+      "post_number": 3,
+      "status": "scheduled",
+      "scheduled_at": "2026-06-03T07:00:00+03:00",
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-03-one-dashboard-publishing.png",
+      "hook": "One post. Multiple platforms. Less manual work.",
+      "caption": "Postora Cloud brings multi-platform posting into one clean workflow. Prepare your content once, customize platform settings, and publish to the channels your audience already uses.",
+      "cta": "Build your next post workflow at https://postora.cloud",
+      "hashtags": ["#PostoraCloud", "#MultiPlatformPosting", "#SocialMediaAutomation", "#InstagramContent", "#FacebookContent", "#ThreadsContent", "#SocialMediaWorkflow", "#SaaSTools", "#MarketingStack", "#ContentOps", "#DigitalCreators", "#Postora"]
+    },
+    {
+      "post_number": 4,
+      "status": "scheduled",
+      "scheduled_at": "2026-06-03T14:00:00+03:00",
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-04-smart-scheduling.png",
+      "hook": "Your content calendar should work as hard as you do.",
+      "caption": "Schedule posts ahead of time with Postora Cloud and keep your brand consistent across the day. Perfect for founders, marketers, and agencies managing busy social media calendars.",
+      "cta": "Plan your next week of posts at https://postora.cloud",
+      "hashtags": ["#SocialMediaScheduling", "#ContentCalendar", "#PostScheduling", "#Postora", "#MarketingProductivity", "#AgencyTools", "#FounderTools", "#InstagramScheduler", "#FacebookScheduler", "#ThreadsScheduler", "#ContentPlanning", "#MarketingAutomation"]
+    },
+    {
+      "post_number": 5,
+      "status": "scheduled",
+      "scheduled_at": "2026-06-03T20:00:00+03:00",
+      "image_path": "F:/postora/public/marketing/postora-campaign-2026-06-02/postora-05-analytics-growth.png",
+      "hook": "Posting is only step one. Growth needs visibility.",
+      "caption": "Postora Cloud helps you manage publishing, monitor performance, and improve your social media strategy from one place. Create smarter workflows for Instagram, Facebook, Threads, and your wider content stack.",
+      "cta": "Upgrade your social media management at https://postora.cloud",
+      "hashtags": ["#SocialMediaAnalytics", "#MarketingDashboard", "#PostoraCloud", "#ContentStrategy", "#InstagramAnalytics", "#FacebookAnalytics", "#ThreadsApp", "#SocialMediaGrowth", "#DigitalMarketingTools", "#AIMarketingTools", "#SaaSMarketing", "#Postora"]
+    }
+  ]
+}

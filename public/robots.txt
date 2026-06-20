@@ -1,0 +1,64 @@
+User-agent: Googlebot
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /post
+Disallow: /calendar
+Disallow: /history
+Disallow: /profiles
+Disallow: /media
+Disallow: /templates
+Disallow: /analytics
+Disallow: /api-keys
+Disallow: /admin
+Disallow: /connection-health
+Disallow: /oauth
+Disallow: /profile
+Disallow: /doc
+
+User-agent: Bingbot
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /post
+Disallow: /calendar
+Disallow: /history
+Disallow: /profiles
+Disallow: /media
+Disallow: /templates
+Disallow: /analytics
+Disallow: /api-keys
+Disallow: /admin
+Disallow: /connection-health
+Disallow: /oauth
+Disallow: /profile
+Disallow: /doc
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /post
+Disallow: /calendar
+Disallow: /history
+Disallow: /profiles
+Disallow: /media
+Disallow: /templates
+Disallow: /analytics
+Disallow: /api-keys
+Disallow: /admin
+Disallow: /connection-health
+Disallow: /oauth
+Disallow: /profile
+Disallow: /doc
+
+Sitemap: https://postora.cloud/sitemap.xml

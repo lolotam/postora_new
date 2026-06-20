@@ -1,0 +1,1 @@
+INSERT INTO app_settings (key, value, description) VALUES ('feature_brand_intelligence', 'false', 'Show Brand Intelligence to non-admin users') ON CONFLICT (key) DO NOTHING;

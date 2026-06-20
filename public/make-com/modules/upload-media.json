@@ -1,0 +1,61 @@
+{
+  "name": "uploadMedia",
+  "label": "Upload Media",
+  "description": "Upload an image or video file to your Postora media library.",
+  "actionType": "action",
+  "communication": {
+    "url": "{{baseUrl}}/api/v1/media/upload",
+    "method": "POST",
+    "headers": {
+      "x-api-key": "{{connection.apiKey}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "media_url": "{{parameters.mediaUrl}}",
+      "media_base64": "{{parameters.mediaBase64}}",
+      "filename": "{{parameters.filename}}",
+      "platforms": "{{parameters.platforms}}"
+    },
+    "response": {
+      "output": "{{body}}"
+    }
+  },
+  "parameters": [
+    {
+      "name": "mediaUrl",
+      "type": "text",
+      "label": "Media URL",
+      "required": false,
+      "help": "Publicly accessible URL of the file to upload. Provide either URL or Base64."
+    },
+    {
+      "name": "mediaBase64",
+      "type": "text",
+      "label": "Media Base64",
+      "required": false,
+      "help": "Base64-encoded file content (alternative to URL)."
+    },
+    {
+      "name": "filename",
+      "type": "text",
+      "label": "Filename",
+      "required": false,
+      "help": "Desired filename with extension (e.g. photo.jpg, video.mp4)."
+    },
+    {
+      "name": "platforms",
+      "type": "text",
+      "label": "Target Platforms",
+      "required": false,
+      "help": "Comma-separated platforms this media is intended for (e.g. instagram,facebook)."
+    }
+  ],
+  "interface": [
+    { "name": "success", "type": "boolean" },
+    { "name": "media_id", "type": "text" },
+    { "name": "file_path", "type": "text" },
+    { "name": "file_type", "type": "text" },
+    { "name": "file_size", "type": "number" },
+    { "name": "public_url", "type": "text" }
+  ]
+}

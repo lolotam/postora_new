@@ -1,0 +1,1 @@
+UPDATE observability_alert_configs SET cooldown_minutes = 1440 WHERE id = '63115275-6f38-4cad-845a-77074b1d2667';

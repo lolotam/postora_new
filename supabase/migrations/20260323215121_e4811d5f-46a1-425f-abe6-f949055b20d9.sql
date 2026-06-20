@@ -1,0 +1,1 @@
+UPDATE ai_providers SET api_endpoint = 'https://api.z.ai/api/paas/v4' WHERE provider_code = 'zai';

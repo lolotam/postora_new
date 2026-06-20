@@ -1,0 +1,525 @@
+# Postora - AI Coding Assistant Context
+
+This document provides comprehensive context for AI coding assistants (Claude, GPT, Gemini) to understand and work with the Postora codebase.
+
+## Project Overview
+
+**Postora** is a social media management platform that allows users to:
+- Connect and manage multiple social media accounts (Facebook, Instagram, TikTok, YouTube, Pinterest)
+- Create and schedule posts across platforms with platform-specific settings
+- Use AI to generate captions, hashtags, and images
+- Secure accounts with 2FA and backup codes
+- Manage user profiles and subscriptions
+- Access an admin dashboard for platform management
+- Stay updated with "What's New" blog posts and notifications
+
+**Live URL**: https://postora.cloud
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 18 + TypeScript + Vite |
+| **Styling** | Tailwind CSS + shadcn/ui |
+| **Backend** | Supabase (PostgreSQL + Edge Functions) |
+| **Auth** | Supabase Auth (Email, Google, Facebook OAuth) |
+| **Storage** | Supabase Storage |
+| **Automation** | n8n webhooks for posting |
+
+---
+
+## Project Structure
+
+```
+postora/
+├── src/
+│   ├── components/       # Reusable UI components
+│   ├── hooks/            # Custom React hooks
+│   ├── pages/            # Page components
+│   │   └── admin/        # Admin dashboard pages
+│   ├── integrations/     # Supabase client setup
+│   └── lib/              # Utility functions
+├── supabase/
+│   ├── functions/        # Edge Functions (Deno)
+│   └── migrations/       # Database migrations
+└── public/               # Static assets
+```
+
+---
+
+## Database Schema
+
+### Core Tables
+
+#### `profiles`
+User profile data, created automatically on signup.
+```sql
+- id: UUID (PK, references auth.users)
+- email: TEXT (unique)
+- full_name: TEXT
+- avatar_url: TEXT
+- api_key: UUID (unique, auto-generated)
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `social_accounts`
+Connected social media accounts.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → auth.users)
+- platform: TEXT ('facebook', 'instagram', 'tiktok', 'twitter', 'linkedin')
+- platform_user_id: TEXT (external platform ID)
+- platform_username: TEXT
+- access_token: TEXT
+- refresh_token: TEXT
+- token_expires_at: TIMESTAMPTZ
+- account_metadata: JSONB
+- avatar_url: TEXT
+- is_active: BOOLEAN
+- social_profile_id: UUID (FK → social_profiles)
+- connected_at, updated_at: TIMESTAMPTZ
+```
+
+#### `social_profiles`
+Grouping profiles for managing multiple account sets.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → auth.users)
+- name: TEXT
+- share_token: TEXT
+- is_public: BOOLEAN
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `posts`
+User posts for scheduling/publishing.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK)
+- caption: TEXT
+- platforms: TEXT[]
+- media_file_ids: UUID[]
+- status: TEXT ('pending', 'processing', 'completed', 'failed')
+- scheduled_at: TIMESTAMPTZ
+- posted_at: TIMESTAMPTZ
+- metadata: JSONB
+- created_at: TIMESTAMPTZ
+```
+
+#### `platform_posts`
+Results per platform for each post.
+```sql
+- id: UUID (PK)
+- post_id: UUID (FK → posts)
+- social_account_id: UUID (FK → social_accounts)
+- platform: TEXT
+- platform_post_id: TEXT
+- platform_post_url: TEXT
+- status: TEXT ('pending', 'success', 'failed')
+- error_message: TEXT
+- response_data: JSONB
+- posted_at, created_at: TIMESTAMPTZ
+```
+
+#### `media_files`
+Uploaded media files.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK)
+- file_path: TEXT
+- file_type: TEXT ('image', 'video')
+- file_size: INTEGER
+- mime_type: TEXT
+- storage_bucket: TEXT
+- metadata: JSONB
+- created_at: TIMESTAMPTZ
+```
+
+### Admin/Subscription Tables
+
+#### `user_roles`
+User role assignments.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → auth.users)
+- role: app_role ENUM ('user', 'admin', 'subscriber')
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `subscription_plans`
+Available subscription plans (managed by admin).
+```sql
+- id: UUID (PK)
+- name: TEXT
+- slug: TEXT (unique)
+- price_monthly: DECIMAL
+- price_yearly: DECIMAL
+- features: JSONB (array of feature strings)
+- profile_limit: INTEGER (-1 = unlimited)
+- is_popular: BOOLEAN
+- is_active: BOOLEAN
+- sort_order: INTEGER
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `user_subscriptions`
+User subscription records.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK)
+- plan_id: UUID (FK → subscription_plans)
+- status: TEXT ('active', 'cancelled', 'expired', 'past_due')
+- current_period_start: TIMESTAMPTZ
+- current_period_end: TIMESTAMPTZ
+- cancel_at_period_end: BOOLEAN
+- stripe_subscription_id: TEXT
+- stripe_customer_id: TEXT
+- coupon_id: UUID (FK → coupons)
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `coupons`
+Discount coupons for subscriptions.
+```sql
+- id: UUID (PK)
+- code: TEXT (unique)
+- discount_percent: INTEGER
+- discount_amount: DECIMAL
+- valid_from, valid_until: TIMESTAMPTZ
+- max_uses: INTEGER
+- current_uses: INTEGER
+- is_active: BOOLEAN
+- created_at: TIMESTAMPTZ
+```
+
+#### `support_messages`
+User support tickets.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK)
+- subject: TEXT
+- message: TEXT
+- status: TEXT ('open', 'in_progress', 'resolved', 'closed')
+- admin_reply: TEXT
+- replied_at: TIMESTAMPTZ
+- replied_by: UUID (FK)
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `app_settings`
+Global application settings.
+```sql
+- id: UUID (PK)
+- key: TEXT (unique)
+- value: JSONB
+- description: TEXT
+- updated_by: UUID (FK)
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `api_logs`
+API request logging.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK)
+- endpoint: TEXT
+- method: TEXT
+- status_code: INTEGER
+- ip_address: INET
+- user_agent: TEXT
+- request_data: JSONB
+- response_data: JSONB
+- created_at: TIMESTAMPTZ
+```
+
+#### `backup_codes`
+2FA backup recovery codes (hashed).
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → auth.users)
+- code_hash: TEXT (SHA-256 hashed, original never stored)
+- used_at: TIMESTAMPTZ (null if unused)
+- created_at: TIMESTAMPTZ
+```
+
+#### `admin_notifications`
+System-wide notifications from admins.
+```sql
+- id: UUID (PK)
+- title: TEXT
+- message: TEXT
+- created_by: UUID (FK → auth.users)
+- created_at: TIMESTAMPTZ
+```
+
+#### `user_notification_reads`
+Tracks which admin notifications users have read.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → auth.users)
+- notification_id: UUID (FK → admin_notifications)
+- read_at: TIMESTAMPTZ
+```
+
+#### `blog_posts`
+"What's New" feature updates and announcements.
+```sql
+- id: UUID (PK)
+- title: TEXT
+- content: TEXT
+- excerpt: TEXT
+- cover_image_url: TEXT
+- status: TEXT ('draft', 'published')
+- author_id: UUID (FK → auth.users)
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+#### `user_blog_post_reads`
+Tracks which blog posts users have read.
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → auth.users)
+- blog_post_id: UUID (FK → blog_posts)
+- read_at: TIMESTAMPTZ
+```
+
+---
+
+## Edge Functions
+
+All edge functions are in `supabase/functions/` and deployed to Supabase.
+
+| Function | Purpose |
+|----------|---------|
+| `facebook-oauth` | Handle Facebook/Instagram OAuth flow and page selection |
+| `tiktok-oauth` | TikTok OAuth authorization and token exchange |
+| `youtube-oauth` | YouTube OAuth with channel selection |
+| `pinterest-oauth` | Pinterest OAuth flow |
+| `pinterest-boards` | Fetch user's Pinterest boards |
+| `process-post` | Process and publish posts to platforms |
+| `process-scheduled-posts` | Cron job for scheduled posts |
+| `n8n-api` | API endpoint for n8n automation |
+| `generate-caption` | AI caption generation |
+| `generate-hashtags` | AI hashtag suggestions |
+| `generate-image` | AI image generation |
+| `suggest-best-times` | Suggest optimal posting times |
+| `refresh-tokens` | Refresh expired OAuth tokens |
+| `check-connection-health` | Verify social account connections |
+| `tiktok-webhook` | TikTok webhook handler |
+
+---
+
+## Key Hooks
+
+| Hook | Location | Purpose |
+|------|----------|---------|
+| `useAuth` | `src/hooks/useAuth.tsx` | Authentication state and methods |
+| `useUserRole` | `src/hooks/useUserRole.tsx` | Get user role (admin/subscriber/user) |
+| `useSocialProfiles` | `src/hooks/useSocialProfiles.tsx` | CRUD for social profiles |
+| `useSocialAccounts` | `src/hooks/useSocialAccounts.tsx` | Connected social accounts |
+| `usePosts` | `src/hooks/usePosts.tsx` | Post management |
+| `useSubscriptionPlans` | `src/hooks/useSubscriptionPlans.tsx` | Fetch subscription plans |
+| `useAdminNotifications` | `src/hooks/useNotifications.tsx` | Fetch admin notifications with read status |
+| `useBlogPosts` | `src/hooks/useNotifications.tsx` | Fetch blog posts with read tracking |
+| `useMarkBlogPostRead` | `src/hooks/useNotifications.tsx` | Mark blog post as read |
+
+---
+
+## Pages
+
+### Public Pages
+- `/` - Landing page
+- `/auth` - Login/Signup
+- `/pricing` - Subscription plans
+- `/privacy` - Privacy policy
+- `/terms` - Terms of service
+
+### Dashboard Pages (Authenticated)
+- `/dashboard` - Main dashboard
+- `/post` - Create new post
+- `/calendar` - Post scheduling calendar
+- `/history` - Post history
+- `/profiles` - Manage social profiles & accounts
+- `/media` - Media library
+- `/templates` - Post templates
+- `/analytics` - Analytics dashboard
+- `/settings` - User settings
+- `/api-keys` - API key management
+- `/connection-health` - Connection status
+
+### Admin Pages (Admin role only)
+- `/admin` - Admin dashboard overview
+- `/admin/users` - User management
+- `/admin/subscriptions` - Subscription management
+- `/admin/plans` - Plans builder
+- `/admin/coupons` - Coupon management
+- `/admin/messages` - Support messages (with user profile info)
+- `/admin/notifications` - Admin notifications manager
+- `/admin/blog` - Blog posts manager (What's New)
+- `/admin/settings` - App settings
+
+---
+
+## Recent Features
+
+### TikTok UX Compliance (CreatePost.tsx)
+TikTok tab includes all required UX elements for API audit:
+- **Creator info display** - Shows connected TikTok username
+- **Privacy level dropdown** - No default value (user must select)
+- **Interaction toggles** - Comments, Duet, Stitch (all default off, Duet/Stitch disabled for photos)
+- **Commercial content disclosure** - "Your brand" and "Branded content" toggles
+- **Legal consent checkbox** - Required before posting
+- **Processing notice** - Informs users about post processing time
+
+### Two-Factor Authentication (Settings.tsx)
+- **QR code generation** - 512px optimized for camera scanning
+- **Download QR button** - 1024px PNG for easy scanning on other devices
+- **Factor management** - View all TOTP factors with verified/unverified status badges
+- **Refresh button** - Reload factor list
+- **Backup codes** - 10 one-time codes, SHA-256 hashed in database
+- **Copy/download codes** - One-time display with save options
+
+### Notification System
+- **Admin notifications** - Inbox tab with read/unread status
+- **Blog posts** - "What's New" tab with unread indicators
+- **Combined badge** - Bell icon shows total unread count
+- **Read tracking** - Persistent tracking via database tables
+
+---
+
+## Database Functions
+
+```sql
+-- Check if user has a specific role
+has_role(user_id UUID, role app_role) → BOOLEAN
+
+-- Get user's primary role
+get_user_role(user_id UUID) → app_role
+
+-- Auto-update updated_at timestamp
+update_updated_at_column() → TRIGGER
+
+-- Create profile on user signup
+handle_new_user() → TRIGGER
+
+-- Create default role on user signup
+handle_new_user_role() → TRIGGER
+```
+
+---
+
+## Environment Variables
+
+### Frontend (`.env`)
+```
+VITE_SUPABASE_URL=https://[project-ref].supabase.co
+VITE_SUPABASE_ANON_KEY=[anon-key]
+```
+
+### Edge Functions (Supabase Secrets)
+```
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+FACEBOOK_APP_ID
+FACEBOOK_APP_SECRET
+TIKTOK_CLIENT_KEY
+TIKTOK_CLIENT_SECRET
+YOUTUBE_CLIENT_ID
+YOUTUBE_CLIENT_SECRET
+PINTEREST_APP_ID
+PINTEREST_APP_SECRET
+OPENAI_API_KEY
+```
+
+---
+
+## Supabase Project
+
+- **Project ID**: `efruibswazzuuupgyzmf`
+- **Dashboard**: https://supabase.com/dashboard/project/efruibswazzuuupgyzmf
+
+---
+
+## Common Tasks
+
+### Deploy Edge Function
+```bash
+npx supabase functions deploy [function-name] --project-ref efruibswazzuuupgyzmf
+```
+
+### Run Locally
+```bash
+npm install
+npm run dev
+```
+
+### Check Logs
+Use Supabase MCP tools:
+```
+mcp_supabase-mcp-server_get_logs(project_id, service)
+```
+
+---
+
+## MCP Routing Guide (use the RIGHT tool for each task)
+
+Postora is hosted on the **Contabo** server and backed by Supabase project
+`efruibswazzuuupgyzmf`. Use these MCPs and ONLY these MCPs for Postora work.
+
+### 1. Database / Backend — `supabase_postora_mcp`
+- **Use for:** querying/reading tables, inspecting `social_accounts`, edge function
+  logs, migrations, project config.
+- **Project ref:** `efruibswazzuuupgyzmf`
+- **When fixing token/auth/health bugs:** read `social_accounts.needs_reauth`,
+  `failure_count`, `last_refresh_error`, `token_expires_at` here to confirm state
+  before AND after a reconnect.
+
+### 2. Hosting / Deployment — `dokploy-contaboo-mcp`
+- **Use for:** deploying the Postora frontend, checking application status,
+  viewing deployment logs, domains, env vars.
+- **Postora project in Dokploy:** `postora` (app name `postors.cloud`).
+- **NOT** dokploy-Musalam-2 / dokploy-Abdelaziz / dokploy-CUREMEDKW — those are
+  other apps on other servers.
+
+### 3. Server / SSH — `ssh-contabo-mcp`
+- **Use for:** shell access to the Contabo host (86.48.2.205), inspecting
+  containers, disk, processes, nginx, grep env files / secrets on the box.
+- **⚠️ Do NOT use `ssh-musalam-1-mcp` or `ssh-musalam-2-mcp` for Postora** —
+  those are different servers. Contabo is the correct one.
+
+### 4. Frontend UI verification — Playwright MCP (`puppeteer`/`playwright`)
+- **Use for:** after a deploy, open the live dashboard/profiles page and verify
+  red banners / badges actually disappear (e.g. confirm a reconnect cleared the
+  `needs_reauth` UI).
+
+### 5. Frontend E2E (optional) — `puppeteer` MCP
+- Browser automation for screenshots and DOM checks when Playwright snapshot
+  isn't enough.
+
+### Decision matrix
+
+| Task | Use this MCP |
+|------|--------------|
+| Read/query Postora DB tables | `supabase_postora_mcp` |
+| Deploy Postora frontend | `dokploy-contaboo-mcp` |
+| Check Postora container/host | `ssh-contabo-mcp` |
+| Verify UI after deploy | Playwright MCP |
+| Supabase edge function logs | `supabase_postora_mcp` |
+| Postora edge-function deploy | Supabase CLI (needs a deploy-capable access token) |
+
+### Known gotcha
+The `SUPABASE_ACCESS_TOKEN` currently in `mcp.json` for `supabase_postora_mcp`
+is **read-only / MCP-scoped** — it CANNOT run `supabase functions deploy`
+(returns HTTP 401). To deploy edge functions, generate a new access token in
+Supabase Dashboard → Account → Access Tokens and use it in the CLI.
+
+---
+
+## Admin User
+
+The following email is configured as admin with full access:
+- `dr.vet.waleedtam@gmail.com`
+
+Admins bypass all subscription limits and see no upgrade prompts.

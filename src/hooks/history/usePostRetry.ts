@@ -1,0 +1,159 @@
+import { useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  PostWithResults, invalidatePostQueries,
+  deleteFailedPlatformPosts, deletePlatformPost, invokeProcessPost,
+} from "./historyUtils";
+
+export function usePostRetry() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [retryingPostId, setRetryingPostId] = useState<string | null>(null);
+  const [bulkRetrying, setBulkRetrying] = useState(false);
+  const [bulkRetryProgress, setBulkRetryProgress] = useState({ current: 0, total: 0 });
+
+  // Retry dialog
+  const [retryDialogPost, setRetryDialogPost] = useState<PostWithResults | null>(null);
+  const [retrySelectedAccountIds, setRetrySelectedAccountIds] = useState<string[]>([]);
+  const [retryLoading, setRetryLoading] = useState(false);
+
+  // Retry with media
+  const [retryMediaDialogPost, setRetryMediaDialogPost] = useState<PostWithResults | null>(null);
+  const [retryMediaFile, setRetryMediaFile] = useState<File | null>(null);
+  const [retryMediaUploading, setRetryMediaUploading] = useState(false);
+  const retryMediaInputRef = useRef<HTMLInputElement>(null);
+
+  const hasTikTokFailure = (post: PostWithResults) =>
+    post.platformResults?.some((r) => r.status === "failed" && r.platform === "tiktok");
+
+  const isTikTokMediaError = (post: PostWithResults) =>
+    post.platformResults?.some(
+      (r) => r.status === "failed" && r.platform === "tiktok" && r.error_message &&
+        (r.error_message.includes("picture_size_check_failed") || r.error_message.includes("video dimensions") || r.error_message.includes("resolution"))
+    );
+
+  const openRetryDialog = (post: PostWithResults) => {
+    const failedAccountIds = post.platformResults?.filter((r) => r.status === "failed" && r.social_account_id).map((r) => r.social_account_id as string) || [];
+    setRetrySelectedAccountIds(failedAccountIds);
+    setRetryDialogPost(post);
+  };
+
+  const openRetryMediaDialog = (post: PostWithResults) => {
+    setRetryMediaDialogPost(post);
+    setRetryMediaFile(null);
+  };
+
+  const handleRetrySinglePlatform = async (postId: string, platformPostId: string, platform: string, accountId?: string | null) => {
+    setRetryingPostId(postId);
+    try {
+      await deletePlatformPost(platformPostId);
+      await invokeProcessPost(postId, [platform], accountId ? [accountId] : undefined);
+      toast({ title: "Retry initiated", description: `Retrying ${platform}...` });
+      invalidatePostQueries(queryClient);
+    } catch (error) {
+      console.error("Single platform retry error:", error);
+      toast({ title: "Retry failed", description: error instanceof Error ? error.message : "Failed to retry platform", variant: "destructive" });
+    } finally { setRetryingPostId(null); }
+  };
+
+  const handleRetryFailed = async (post: PostWithResults) => {
+    const failedPlatforms = post.platformResults?.filter((r) => r.status === "failed").map((r) => r.platform) || [];
+    if (failedPlatforms.length === 0) { toast({ title: "No failed platforms", description: "This post has no failed platforms to retry." }); return; }
+    if (hasTikTokFailure(post)) { openRetryDialog(post); return; }
+
+    setRetryingPostId(post.id);
+    try {
+      await deleteFailedPlatformPosts(post.id);
+      await invokeProcessPost(post.id);
+      toast({ title: "Retry initiated", description: `Retrying ${failedPlatforms.length} failed platform(s).` });
+      invalidatePostQueries(queryClient);
+    } catch (error) {
+      console.error("Retry error:", error);
+      toast({ title: "Retry failed", description: error instanceof Error ? error.message : "Failed to retry post", variant: "destructive" });
+    } finally { setRetryingPostId(null); }
+  };
+
+  const handleRetryWithAccounts = async () => {
+    if (!retryDialogPost || retrySelectedAccountIds.length === 0) return;
+    setRetryLoading(true);
+    try {
+      await deleteFailedPlatformPosts(retryDialogPost.id);
+      const { error: updateError } = await supabase.from("posts").update({
+        metadata: { ...(retryDialogPost.metadata || {}), selected_account_ids: retrySelectedAccountIds },
+      }).eq("id", retryDialogPost.id);
+      if (updateError) throw updateError;
+      await invokeProcessPost(retryDialogPost.id);
+      toast({ title: "Retry initiated", description: `Retrying with ${retrySelectedAccountIds.length} selected account(s).` });
+      invalidatePostQueries(queryClient);
+      setRetryDialogPost(null);
+    } catch (error) {
+      console.error("Retry error:", error);
+      toast({ title: "Retry failed", description: error instanceof Error ? error.message : "Failed to retry post", variant: "destructive" });
+    } finally { setRetryLoading(false); }
+  };
+
+  const handleRetryWithNewMedia = async () => {
+    if (!retryMediaDialogPost || !retryMediaFile) return;
+    setRetryMediaUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const fileExt = retryMediaFile.name.split(".").pop();
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage.from("media").upload(fileName, retryMediaFile, { cacheControl: "3600", upsert: false });
+      if (uploadError) throw uploadError;
+
+      const isGif = retryMediaFile.type === "image/gif" || retryMediaFile.name.toLowerCase().endsWith(".gif");
+      const fileType = retryMediaFile.type.startsWith("video") ? "video" : isGif ? "gif" : "image";
+
+      const { data: newMediaFile, error: mediaError } = await supabase.from("media_files").insert({
+        user_id: user.id, file_path: uploadData.path, file_type: fileType, file_size: retryMediaFile.size, mime_type: retryMediaFile.type, storage_bucket: "media",
+      }).select().single();
+      if (mediaError) throw mediaError;
+
+      await deleteFailedPlatformPosts(retryMediaDialogPost.id);
+      const { error: updateError } = await supabase.from("posts").update({ media_file_ids: [newMediaFile.id], status: "pending" }).eq("id", retryMediaDialogPost.id);
+      if (updateError) throw updateError;
+
+      await invokeProcessPost(retryMediaDialogPost.id);
+      toast({ title: "Retry initiated with new media", description: "Your post is being processed with the new video file." });
+      invalidatePostQueries(queryClient);
+      setRetryMediaDialogPost(null);
+      setRetryMediaFile(null);
+    } catch (error) {
+      console.error("Retry with media error:", error);
+      toast({ title: "Retry failed", description: error instanceof Error ? error.message : "Failed to retry post", variant: "destructive" });
+    } finally { setRetryMediaUploading(false); }
+  };
+
+  const handleBulkRetry = async (failedPosts: PostWithResults[]) => {
+    if (failedPosts.length === 0) { toast({ title: "No failed posts", description: "There are no failed posts to retry." }); return; }
+    setBulkRetrying(true);
+    setBulkRetryProgress({ current: 0, total: failedPosts.length });
+    let successCount = 0, errorCount = 0;
+    for (let i = 0; i < failedPosts.length; i++) {
+      setBulkRetryProgress({ current: i + 1, total: failedPosts.length });
+      try { await deleteFailedPlatformPosts(failedPosts[i].id); await invokeProcessPost(failedPosts[i].id); successCount++; }
+      catch { errorCount++; }
+    }
+    setBulkRetrying(false);
+    invalidatePostQueries(queryClient);
+    toast({ title: "Bulk retry complete", description: `${successCount} post(s) retried successfully${errorCount > 0 ? `, ${errorCount} failed` : ""}.` });
+  };
+
+  const toggleRetryAccountSelection = (accountId: string) => {
+    setRetrySelectedAccountIds((prev) => prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]);
+  };
+
+  return {
+    retryingPostId, bulkRetrying, bulkRetryProgress,
+    retryDialogPost, setRetryDialogPost, retrySelectedAccountIds, retryLoading,
+    retryMediaDialogPost, setRetryMediaDialogPost, retryMediaFile, setRetryMediaFile, retryMediaUploading, retryMediaInputRef,
+    handleRetryFailed, handleRetrySinglePlatform, handleRetryWithAccounts, handleRetryWithNewMedia,
+    handleBulkRetry, openRetryMediaDialog, isTikTokMediaError, toggleRetryAccountSelection,
+  };
+}

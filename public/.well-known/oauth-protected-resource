@@ -1,0 +1,10 @@
+{
+  "resource": "https://api.postora.cloud/functions/v1/mcp",
+  "authorization_servers": [
+    "https://postora.cloud"
+  ],
+  "bearer_methods_supported": [
+    "header"
+  ],
+  "resource_documentation": "https://postora.cloud/docs/mcp-server"
+}

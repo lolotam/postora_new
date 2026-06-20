@@ -1,0 +1,27 @@
+{
+  "name": "postora-api-key",
+  "label": "Postora API Key",
+  "type": "apiKey",
+  "communication": {
+    "url": "{{baseUrl}}/api/v1/accounts",
+    "method": "GET",
+    "headers": {
+      "x-api-key": "{{parameters.apiKey}}"
+    },
+    "response": {
+      "valid": "{{statusCode == 200}}",
+      "error": {
+        "message": "{{body.error || 'Invalid API key. Get your key at postora.cloud/api-keys'}}"
+      }
+    }
+  },
+  "parameters": [
+    {
+      "name": "apiKey",
+      "type": "text",
+      "label": "API Key",
+      "required": true,
+      "help": "Your Postora API key. Find it at [Settings → API Keys](https://postora.cloud/api-keys)."
+    }
+  ]
+}

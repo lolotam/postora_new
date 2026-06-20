@@ -1,0 +1,77 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "Back to home" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - text: Back to home
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - img [ref=e13]
+          - generic [ref=e16]: Postora
+        - heading "Manage all your social media in one place." [level=1] [ref=e17]
+        - paragraph [ref=e18]: Connect your accounts, create stunning content, and reach your audience everywhere—effortlessly.
+      - paragraph [ref=e19]: Trusted by 10,000+ content creators worldwide
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - heading "Create your account" [level=2] [ref=e24]
+          - paragraph [ref=e25]: Start your social media journey today
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - text: Full Name
+            - textbox "Full Name" [ref=e28]:
+              - /placeholder: John Doe
+              - text: E2E User
+          - generic [ref=e29]:
+            - text: Email
+            - textbox "Email" [ref=e30]:
+              - /placeholder: you@example.com
+              - text: e2e-auth-1767936292598@example.com
+          - generic [ref=e31]:
+            - generic [ref=e33]: Password
+            - generic [ref=e34]:
+              - textbox "Password" [ref=e35]:
+                - /placeholder: ••••••••
+                - text: Password123!
+              - button [ref=e36] [cursor=pointer]:
+                - img [ref=e37]
+          - button "Create Account" [ref=e40] [cursor=pointer]
+        - generic [ref=e45]: Or continue with
+        - button "Continue with Google" [ref=e46] [cursor=pointer]:
+          - img
+          - text: Continue with Google
+        - paragraph [ref=e48]:
+          - text: Already have an account?
+          - link "Sign in" [ref=e49] [cursor=pointer]:
+            - /url: /auth
+      - paragraph [ref=e50]:
+        - text: By continuing, you agree to our
+        - link "Terms of Service" [ref=e51] [cursor=pointer]:
+          - /url: /terms
+        - text: and
+        - link "Privacy Policy" [ref=e52] [cursor=pointer]:
+          - /url: /privacy
+        - text: .
+    - generic [ref=e55]:
+      - button "Dismiss cookie notice" [ref=e56] [cursor=pointer]:
+        - img [ref=e57]
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - img [ref=e63]
+          - generic [ref=e65]:
+            - heading "We use cookies 🍪" [level=3] [ref=e66]
+            - paragraph [ref=e67]:
+              - text: We use cookies to enhance your experience, remember your preferences, and enable social media integrations. You can customize your preferences or accept all cookies.
+              - link "Learn more" [ref=e68] [cursor=pointer]:
+                - /url: /cookies
+        - generic [ref=e69]:
+          - button "Essential Only" [ref=e70] [cursor=pointer]
+          - button "Accept All" [ref=e71] [cursor=pointer]
+```

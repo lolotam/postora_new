@@ -1,0 +1,41 @@
+{
+    "projectName": "postora",
+    "testFramework": "vitest",
+    "testDirectory": "src/test",
+    "sourceDirectory": "src",
+    "baseUrl": "http://localhost:5173",
+    "framework": "react",
+    "language": "typescript",
+    "components": {
+        "directory": "src/components",
+        "extensions": [
+            ".tsx"
+        ]
+    },
+    "pages": {
+        "directory": "src/pages",
+        "extensions": [
+            ".tsx"
+        ]
+    },
+    "hooks": {
+        "directory": "src/hooks",
+        "extensions": [
+            ".ts",
+            ".tsx"
+        ]
+    },
+    "testing": {
+        "unitTests": true,
+        "integrationTests": true,
+        "e2eTests": true,
+        "coverage": {
+            "enabled": true,
+            "threshold": 70
+        }
+    },
+    "ai": {
+        "generateDescriptions": true,
+        "generateAssertions": true
+    }
+}
