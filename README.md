@@ -422,13 +422,17 @@ All tables are RLS-protected. Admin access is granted via the SECURITY DEFINER h
 
 ### Frontend (`.env`)
 
-These are auto-injected by Lovable; for local dev they default to the project's published Supabase project:
+Copy `.env.example` to `.env` and fill in the values. Required frontend variables:
 
 ```
-VITE_SUPABASE_URL=https://efruibswazzuuupgyzmf.supabase.co
+VITE_SUPABASE_URL=https://supabase.postora.cloud
 VITE_SUPABASE_PUBLISHABLE_KEY=<publishable key>
 VITE_SUPABASE_PROJECT_ID=efruibswazzuuupgyzmf
 ```
+
+> See `.env.example` for the safe template and the URL cutover notes (testing app
+> `https://new.postora.cloud` → final `https://postora.cloud`; Supabase API stays
+> `https://supabase.postora.cloud`).
 
 The frontend never reads platform secrets.
 
