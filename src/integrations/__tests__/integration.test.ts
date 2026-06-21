@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { supabase } from "../supabase/client"; // Import existing client
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 
 describe("Integration Tests", () => {
