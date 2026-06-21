@@ -1,5 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { handleCorsOptions, jsonResponse, errorResponse, badRequestResponse } from "../_shared/cors.ts";
+import {
+  handleCorsOptions,
+  jsonResponse,
+  errorResponse,
+  badRequestResponse,
+  unauthorizedResponse,
+} from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -104,24 +110,58 @@ Deno.serve(async (req) => {
     return handleCorsOptions();
   }
 
+  if (req.method !== "POST") {
+    return errorResponse("Method not allowed", 405);
+  }
+
   try {
-    const { account_id, action } = await req.json();
+    const authorizationHeader = req.headers.get("Authorization");
+    const bearerMatch = authorizationHeader?.match(/^Bearer\s+(\S+)$/i);
+
+    if (!bearerMatch) {
+      return unauthorizedResponse();
+    }
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Supabase credentials not configured");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: { user: callerUser }, error: authError } = await supabase.auth.getUser(bearerMatch[1]);
+
+    if (authError || !callerUser) {
+      return unauthorizedResponse();
+    }
+
+    let requestBody: unknown;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return badRequestResponse("account_id is required");
+    }
+
+    if (typeof requestBody !== "object" || requestBody === null) {
+      return badRequestResponse("account_id is required");
+    }
+
+    const { account_id, action } = requestBody as Record<string, unknown>;
+    if (typeof account_id !== "string" || account_id.trim() === "") {
+      return badRequestResponse("account_id is required");
+    }
 
     // Get the account
     const { data: account, error: fetchError } = await supabase
       .from("social_accounts")
-      .select("id, platform, access_token, token_expires_at, account_metadata")
+      .select("id, user_id, platform, access_token, token_expires_at, account_metadata")
       .eq("id", account_id)
-      .single();
+      .maybeSingle();
 
-    if (fetchError || !account) {
-      throw new Error("Account not found");
+    if (fetchError) {
+      throw new Error("Account lookup failed");
+    }
+
+    if (!account || account.user_id !== callerUser.id) {
+      return errorResponse("Forbidden", 403);
     }
 
     // Test the connection
@@ -187,7 +227,6 @@ Deno.serve(async (req) => {
 
   } catch (error: unknown) {
     console.error("Connection health check error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(message);
+    return errorResponse("Internal error");
   }
 });
