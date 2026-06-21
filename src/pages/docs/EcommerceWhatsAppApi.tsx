@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const ENDPOINT = `https://${PROJECT_ID}.supabase.co/functions/v1/ecommerce-whatsapp-api`;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const ENDPOINT = `${SUPABASE_URL}/functions/v1/ecommerce-whatsapp-api`;
 
 function Code({ children }: { children: string }) {
   return (

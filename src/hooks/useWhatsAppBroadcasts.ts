@@ -99,11 +99,11 @@ export function useWhatsAppBroadcasts() {
         if (!session?.access_token) throw new Error("Not authenticated");
       }
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/whatsapp-broadcast`,
+        `${supabaseUrl}/functions/v1/whatsapp-broadcast`,
         {
           method: "POST",
           headers: {

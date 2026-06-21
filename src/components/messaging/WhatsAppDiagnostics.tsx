@@ -39,10 +39,10 @@ async function callApi(action: string, body: Record<string, unknown>) {
     session = refreshed.session;
     if (!session?.access_token) throw new Error("Not authenticated");
   }
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const res = await fetch(
-    `https://${projectId}.supabase.co/functions/v1/messaging-api`,
+    `${supabaseUrl}/functions/v1/messaging-api`,
     {
       method: "POST",
       headers: {
@@ -57,9 +57,9 @@ async function callApi(action: string, body: Record<string, unknown>) {
 }
 
 async function callWebhookTest(payload: unknown) {
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const res = await fetch(
-    `https://${projectId}.supabase.co/functions/v1/whatsapp-webhook`,
+    `${supabaseUrl}/functions/v1/whatsapp-webhook`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

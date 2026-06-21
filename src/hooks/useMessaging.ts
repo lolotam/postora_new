@@ -47,10 +47,10 @@ async function callMessagingApi(action: string, body: Record<string, unknown>) {
     if (!session?.access_token) throw new Error("Not authenticated");
   }
 
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   // Retry on transient edge-runtime errors (cold-start 502/503/504)
-  const url = `https://${projectId}.supabase.co/functions/v1/messaging-api`;
+  const url = `${supabaseUrl}/functions/v1/messaging-api`;
   const init: RequestInit = {
     method: "POST",
     headers: {
