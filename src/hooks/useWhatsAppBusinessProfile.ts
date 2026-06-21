@@ -12,6 +12,8 @@ export interface WhatsAppBusinessProfile {
   profile_picture_url?: string;
 }
 
+const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
@@ -20,16 +22,16 @@ async function getAuthHeaders() {
     if (!refreshed.session?.access_token) throw new Error("Not authenticated");
     return {
       Authorization: `Bearer ${refreshed.session.access_token}`,
-      apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmcnVpYnN3YXp6dXV1cGd5em1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyOTE4NjgsImV4cCI6MjA4Mjg2Nzg2OH0.A591L2M5dMAaVm-W-DZYg5wsvtVp9qkzTrzWsRolRDA",
+      apikey: anonKey,
     };
   }
   return {
     Authorization: `Bearer ${session.access_token}`,
-    apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmcnVpYnN3YXp6dXV1cGd5em1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyOTE4NjgsImV4cCI6MjA4Mjg2Nzg2OH0.A591L2M5dMAaVm-W-DZYg5wsvtVp9qkzTrzWsRolRDA",
+    apikey: anonKey,
   };
 }
 
-const BASE_URL = "https://efruibswazzuuupgyzmf.supabase.co/functions/v1/whatsapp-profile";
+const BASE_URL = "https://supabase.postora.cloud/functions/v1/whatsapp-profile";
 
 export function useWhatsAppBusinessProfile() {
   const queryClient = useQueryClient();

@@ -2,12 +2,21 @@
 import { encodeBase64 } from "jsr:@std/encoding/base64";
 import { join } from "jsr:@std/path";
 
-const SUPABASE_URL = "https://api.postora.cloud";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmcnVpYnN3YXp6dXV1cGd5em1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyOTE4NjgsImV4cCI6MjA4Mjg2Nzg2OH0.A591L2M5dMAaVm-W-DZYg5wsvtVp9qkzTrzWsRolRDA";
+function resolveConfig() {
+    const url = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL") || "https://supabase.postora.cloud";
+    const key = (Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY") || "").trim();
+
+    if (!key) {
+        console.error("Missing required env var SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY). Copy .env.example to .env and set it.");
+        Deno.exit(1);
+    }
+
+    return { url, key };
+}
 
 const OUTPUT_JSON_PATH = "logo_urls.json";
 
-async function uploadLogo(filePath: string, fileName: string) {
+async function uploadLogo(filePath: string, fileName: string, config: { url: string; key: string }) {
     try {
         console.log(`Reading file: ${filePath}`);
         const fileBytes = await Deno.readFile(filePath);
@@ -16,10 +25,10 @@ async function uploadLogo(filePath: string, fileName: string) {
 
         console.log(`Uploading ${fileName}...`);
 
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/cloudinary-upload`, {
+        const response = await fetch(`${config.url}/functions/v1/cloudinary-upload`, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+                "Authorization": `Bearer ${config.key}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -49,6 +58,7 @@ async function uploadLogo(filePath: string, fileName: string) {
 }
 
 async function main() {
+    const config = resolveConfig();
     const args = Deno.args;
     if (args.length === 0) {
         console.error("Please provide the directory path containing images.");
@@ -61,7 +71,7 @@ async function main() {
     for await (const entry of Deno.readDir(dirPath)) {
         if (entry.isFile && entry.name.endsWith(".png")) {
             const filePath = join(dirPath, entry.name);
-            const result = await uploadLogo(filePath, entry.name);
+            const result = await uploadLogo(filePath, entry.name, config);
             if (result) {
                 uploadedLogos[result.name] = result.url;
             }

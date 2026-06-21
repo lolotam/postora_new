@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_STUDIO_URL } from "@/lib/supabaseStudio";
 import { toast } from "sonner";
 import { Copy, Plus, Trash2, ExternalLink, KeyRound, Loader2, Globe, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 
@@ -256,7 +257,7 @@ export default function AdminOAuthApps() {
                 <DialogTitle>Register OAuth App</DialogTitle>
                 <DialogDescription>
                   Add a new OAuth application. You must also register this app in the{" "}
-                  <a href="https://supabase.com/dashboard/project/efruibswazzuuupgyzmf/auth/oauth-apps" target="_blank" rel="noopener noreferrer" className="text-primary underline inline-flex items-center gap-1">Supabase Dashboard <ExternalLink className="w-3 h-3" /></a>.
+                  <a href={SUPABASE_STUDIO_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline inline-flex items-center gap-1">Open Supabase Studio <ExternalLink className="w-3 h-3" /></a>.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">

@@ -2,12 +2,21 @@
 import fs from 'fs';
 import path from 'path';
 
-const SUPABASE_URL = "https://api.postora.cloud";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmcnVpYnN3YXp6dXV1cGd5em1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyOTE4NjgsImV4cCI6MjA4Mjg2Nzg2OH0.A591L2M5dMAaVm-W-DZYg5wsvtVp9qkzTrzWsRolRDA";
+function resolveConfig() {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://supabase.postora.cloud";
+    const key = (process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim();
+
+    if (!key) {
+        console.error("Missing required env var SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY). Copy .env.example to .env and set it.");
+        process.exit(1);
+    }
+
+    return { url, key };
+}
 
 const OUTPUT_JSON_PATH = "logo_urls.json";
 
-async function uploadLogo(filePath, fileName) {
+async function uploadLogo(filePath, fileName, config) {
     try {
         console.log(`Reading file: ${filePath}`);
         const fileBytes = fs.readFileSync(filePath);
@@ -19,10 +28,10 @@ async function uploadLogo(filePath, fileName) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/cloudinary-upload`, {
+        const response = await fetch(`${config.url}/functions/v1/cloudinary-upload`, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+                "Authorization": `Bearer ${config.key}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -56,6 +65,7 @@ async function uploadLogo(filePath, fileName) {
 }
 
 async function main() {
+    const config = resolveConfig();
     const args = process.argv.slice(2);
     if (args.length === 0) {
         console.error("Please provide the directory path containing images.");
@@ -70,7 +80,7 @@ async function main() {
     for (const file of files) {
         if (file.endsWith(".png") && file.includes("_logo_")) {
             const filePath = path.join(dirPath, file);
-            const result = await uploadLogo(filePath, file);
+            const result = await uploadLogo(filePath, file, config);
             if (result) {
                 uploadedLogos[result.name] = result.url;
             }

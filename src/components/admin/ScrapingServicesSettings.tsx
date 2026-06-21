@@ -21,6 +21,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_STUDIO_URL } from "@/lib/supabaseStudio";
 import { useToast } from "@/hooks/use-toast";
 
 const APIFY_ACTOR_KEYS = [
@@ -243,7 +244,7 @@ export function ScrapingServicesSettings() {
                 Apify Actor Endpoints
               </span>
               <a
-                href="https://supabase.com/dashboard/project/efruibswazzuuupgyzmf/settings/functions"
+                href={SUPABASE_STUDIO_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-[10px] text-primary hover:underline"

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2, Save, Video, RotateCcw, Globe, Image, Bookmark, CreditCard, Palette, Brain, Cpu, Mail, AlertTriangle, UserCheck, BellRing, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_STUDIO_URL } from "@/lib/supabaseStudio";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AIConfigurationTab } from "@/pages/admin/AIConfigurationTab";
@@ -421,7 +422,7 @@ export default function AdminSettings() {
                 </p>
                 <Button variant="outline" size="sm" asChild>
                   <a
-                    href="https://supabase.com/dashboard/project/efruibswazzuuupgyzmf/auth/templates"
+                    href={SUPABASE_STUDIO_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
