@@ -13,7 +13,7 @@ it("allows Supabase Realtime and blob workers without broad CSP wildcards", () =
 
   const connectSrc = cspDirective.match(/connect-src [^;]+;/)?.[0];
 
-  if (!connectSrc?.includes("wss://supabase.postora.cloud")) {
+  if (!connectSrc?.includes("wss://api.postora.cloud")) {
     throw new Error(
       `Supabase Realtime WebSocket host missing from connect-src: ${JSON.stringify(connectSrc)}`,
     );
