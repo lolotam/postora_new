@@ -31,7 +31,7 @@ async function getAuthHeaders() {
   };
 }
 
-const BASE_URL = "https://supabase.postora.cloud/functions/v1/whatsapp-profile";
+const BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-profile`;
 
 export function useWhatsAppBusinessProfile() {
   const queryClient = useQueryClient();
