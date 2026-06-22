@@ -5,7 +5,7 @@
 - **Live app:** https://postora.cloud
 - **Preview / staging:** https://postora.lovable.app
 - **Operating entity:** WALEED PROLIFE LLC — 200 N Vineyard Blvd, Ste A325 334, Honolulu, HI 96817, USA
-- **Supabase project ref:** `efruibswazzuuupgyzmf`
+- **Supabase Backend:** Self-hosted Supabase (managed via Dokploy on VPS `86.48.2.205`) at `https://api.postora.cloud`
 
 Postora connects to 11 social platforms, publishes immediately or on a schedule, generates content with AI, ingests cross-platform analytics, and exposes everything through a hardened admin console plus a public API used by the official n8n and Make.com integrations.
 
@@ -425,8 +425,8 @@ All tables are RLS-protected. Admin access is granted via the SECURITY DEFINER h
 Copy `.env.example` to `.env` and fill in the values. Required frontend variables:
 
 ```
-VITE_SUPABASE_URL=https://supabase.postora.cloud
-VITE_SUPABASE_PUBLISHABLE_KEY=<publishable key>
+VITE_SUPABASE_URL=https://api.postora.cloud
+VITE_SUPABASE_PUBLISHABLE_KEY=<your_self_hosted_anon_key>
 VITE_SUPABASE_PROJECT_ID=efruibswazzuuupgyzmf
 ```
 
@@ -519,9 +519,10 @@ Other scripts:
 
 ## Production deployment
 
-- **Hosted via Lovable** at https://postora.cloud (custom domain) and https://postora.lovable.app.
-- Edge functions auto-deploy from this repo to Supabase project `efruibswazzuuupgyzmf`.
-- Migrations under `supabase/migrations/` are applied via the Lovable migration tool (this folder is read-only here — create new timestamped migrations rather than editing).
+- **Hosted on VPS/Server** via Dokploy at `86.48.2.205`. The frontend is built from `https://github.com/lolotam/remix-of-postora.cloud.git` and runs as a Docker container.
+- **Supabase Backend:** Self-hosted Supabase running in Docker Swarm under Dokploy.
+- **Edge functions:** Deployed to the self-hosted Supabase instance at `https://api.postora.cloud` using Supabase CLI.
+- **Migrations:** Applied locally or via the CLI to the self-hosted database instance.
 
 ---
 
@@ -559,8 +560,8 @@ services:
 When something breaks, check in this order:
 
 1. **Browser console + Sentry** — frontend errors / 401 cascades.
-2. **Edge function logs** — Supabase dashboard:
-   `https://supabase.com/dashboard/project/efruibswazzuuupgyzmf/functions/<function>/logs`
+2. **Edge function logs** — Self-hosted Supabase Studio logs:
+   `https://api.postora.cloud` (or `https://supabase.postora.cloud`) Studio interface.
 3. **`/admin/logs`** — `system_logs` table (48h retention via `observability-collector`). Use the inline AI analyzer (`analyze-log`) for root-cause + Lovable prompt.
 4. **`/admin/observability`** — health scores, edge function status, alert history.
 5. **`/admin/token-health`** — token expiry distribution + per-account refresh outcomes.

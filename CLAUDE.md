@@ -414,8 +414,9 @@ handle_new_user_role() → TRIGGER
 
 ### Frontend (`.env`)
 ```
-VITE_SUPABASE_URL=https://[project-ref].supabase.co
-VITE_SUPABASE_ANON_KEY=[anon-key]
+VITE_SUPABASE_URL=https://api.postora.cloud
+VITE_SUPABASE_PUBLISHABLE_KEY=[anon-key]
+VITE_SUPABASE_PROJECT_ID=efruibswazzuuupgyzmf
 ```
 
 ### Edge Functions (Supabase Secrets)
@@ -435,10 +436,12 @@ OPENAI_API_KEY
 
 ---
 
-## Supabase Project
+## Supabase Project (Self-hosted)
 
-- **Project ID**: `efruibswazzuuupgyzmf`
-- **Dashboard**: https://supabase.com/dashboard/project/efruibswazzuuupgyzmf
+- **API URL**: `https://api.postora.cloud` (Kong Gateway routing auth/rest/storage/functions)
+- **Studio Dashboard**: Accessible via `https://api.postora.cloud` (or direct Studio container setup)
+- **Dokploy Stack**: `postorasupabase-supabase-j8axyh` on VPS Contabo `86.48.2.205`
+- **Internal / Project ID**: `efruibswazzuuupgyzmf` (historical ref used in CLI/container paths)
 
 ---
 
@@ -456,32 +459,23 @@ npm run dev
 ```
 
 ### Check Logs
-Use Supabase MCP tools:
-```
-mcp_supabase-mcp-server_get_logs(project_id, service)
-```
+Use Supabase MCP tools or view the self-hosted dashboard.
 
 ---
 
 ## MCP Routing Guide (use the RIGHT tool for each task)
 
-Postora is hosted on the **Contabo** server and backed by Supabase project
-`efruibswazzuuupgyzmf`. Use these MCPs and ONLY these MCPs for Postora work.
+Postora is hosted on the **Contabo** server and backed by a self-hosted Supabase stack. Use these MCPs and ONLY these MCPs for Postora work.
 
 ### 1. Database / Backend — `supabase_postora_mcp`
-- **Use for:** querying/reading tables, inspecting `social_accounts`, edge function
-  logs, migrations, project config.
-- **Project ref:** `efruibswazzuuupgyzmf`
-- **When fixing token/auth/health bugs:** read `social_accounts.needs_reauth`,
-  `failure_count`, `last_refresh_error`, `token_expires_at` here to confirm state
-  before AND after a reconnect.
+- **Use for:** querying/reading tables, inspecting `social_accounts`, edge function logs, migrations, project config.
+- **Self-hosted database reference:** Connects to Postgres on the Contabo server `86.48.2.205`.
+- **When fixing token/auth/health bugs:** read `social_accounts.needs_reauth`, `failure_count`, `last_refresh_error`, `token_expires_at` here to confirm state before AND after a reconnect.
 
 ### 2. Hosting / Deployment — `dokploy-contaboo-mcp`
-- **Use for:** deploying the Postora frontend, checking application status,
-  viewing deployment logs, domains, env vars.
+- **Use for:** deploying the Postora frontend, checking application status, viewing deployment logs, domains, env vars.
 - **Postora project in Dokploy:** `postora` (app name `postors.cloud`).
-- **NOT** dokploy-Musalam-2 / dokploy-Abdelaziz / dokploy-CUREMEDKW — those are
-  other apps on other servers.
+- **NOT** dokploy-Musalam-2 / dokploy-Abdelaziz / dokploy-CUREMEDKW — those are other apps on other servers.
 
 ### 3. Server / SSH — `ssh-contabo-mcp`
 - **Use for:** shell access to the Contabo host (86.48.2.205), inspecting

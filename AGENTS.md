@@ -414,8 +414,9 @@ handle_new_user_role() → TRIGGER
 
 ### Frontend (`.env`)
 ```
-VITE_SUPABASE_URL=https://[project-ref].supabase.co
-VITE_SUPABASE_ANON_KEY=[anon-key]
+VITE_SUPABASE_URL=https://api.postora.cloud
+VITE_SUPABASE_PUBLISHABLE_KEY=[anon-key]
+VITE_SUPABASE_PROJECT_ID=efruibswazzuuupgyzmf
 ```
 
 ### Edge Functions (Supabase Secrets)
@@ -435,10 +436,12 @@ OPENAI_API_KEY
 
 ---
 
-## Supabase Project
+## Supabase Project (Self-hosted)
 
-- **Project ID**: `efruibswazzuuupgyzmf`
-- **Dashboard**: https://supabase.com/dashboard/project/efruibswazzuuupgyzmf
+- **API URL**: `https://api.postora.cloud` (Kong Gateway routing auth/rest/storage/functions)
+- **Studio Dashboard**: Accessible via `https://api.postora.cloud` (or direct Studio container setup)
+- **Dokploy Stack**: `postorasupabase-supabase-j8axyh` on VPS Contabo `86.48.2.205`
+- **Internal / Project ID**: `efruibswazzuuupgyzmf` (historical ref used in CLI/container paths)
 
 ---
 
@@ -456,10 +459,7 @@ npm run dev
 ```
 
 ### Check Logs
-Use Supabase MCP tools:
-```
-mcp_supabase-mcp-server_get_logs(project_id, service)
-```
+Use Supabase MCP tools or view the self-hosted dashboard.
 
 ---
 
