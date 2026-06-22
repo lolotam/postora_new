@@ -216,7 +216,7 @@ serve(async (req) => {
         let apiKey: string | undefined;
         
         // For external services, check known env vars
-        const envMap: Record<string, string> = { firecrawl: 'FIRECRAWL_API_KEY', apify: 'APIFY_API_KEY' };
+        const envMap: Record<string, string> = { firecrawl: 'FIRECRAWL_API_KEY', apify: 'APIFY_API_TOKEN' };
         if (envMap[provider_code]) {
           apiKey = Deno.env.get(envMap[provider_code]);
         } else {
@@ -265,7 +265,7 @@ serve(async (req) => {
         if (!provider_code) return new Response(JSON.stringify({ error: 'provider_code required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
         // Check env var first
-        const envMap: Record<string, string> = { firecrawl: 'FIRECRAWL_API_KEY', apify: 'APIFY_API_KEY' };
+        const envMap: Record<string, string> = { firecrawl: 'FIRECRAWL_API_KEY', apify: 'APIFY_API_TOKEN' };
         let hasEnv = false;
         if (envMap[provider_code]) {
           hasEnv = !!Deno.env.get(envMap[provider_code]);

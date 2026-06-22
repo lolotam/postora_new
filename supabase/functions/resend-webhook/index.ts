@@ -49,6 +49,14 @@ async function verifyWebhookSignature(
     // Convert to base64
     const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)));
 
+    // Check timestamp to prevent replay attacks
+    const timestamp = parseInt(headers.svixTimestamp, 10);
+    const now = Math.floor(Date.now() / 1000);
+    if (!Number.isFinite(timestamp) || Math.abs(now - timestamp) > 300) { // 5 minute tolerance
+      console.error("Webhook timestamp too old");
+      return false;
+    }
+
     // Extract and verify signatures
     const signatures = headers.svixSignature.split(" ");
     for (const sig of signatures) {
@@ -58,17 +66,7 @@ async function verifyWebhookSignature(
       }
     }
 
-    // Fallback: check timestamp (prevent replay attacks)
-    const timestamp = parseInt(headers.svixTimestamp, 10);
-    const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - timestamp) > 300) { // 5 minute tolerance
-      console.error("Webhook timestamp too old");
-      return false;
-    }
-
-    // For development, allow if secret matches and timestamp is valid
-    console.log("Signature verification in progress...");
-    return true; // In production, you might want stricter verification
+    return false;
   } catch (error) {
     console.error("Error verifying webhook signature:", error);
     return false;
@@ -268,8 +266,6 @@ serve(async (req) => {
 
     // Get raw payload for signature verification
     const payload = await req.text();
-    console.log("Received webhook payload:", payload.substring(0, 500));
-
     // Get Svix headers
     const svixHeaders = {
       svixId: req.headers.get("svix-id"),

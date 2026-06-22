@@ -74,7 +74,7 @@ const DEEPGRAM_ENDPOINT = "https://api.deepgram.com/v1/listen?model=nova-3&langu
 const GOOGLE_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
 
 async function transcribeWithOpenAI(audioBlob: Blob, model: string, supabaseAdmin?: any): Promise<TranscriptionResult> {
-  let openaiKey = Deno.env.get("OPENAIAPIKEY") || Deno.env.get("OPENAI_API_KEY");
+  let openaiKey = Deno.env.get("OPENAI_API_KEY");
   
   if (!openaiKey && supabaseAdmin) {
     if (_cachedDbOpenAIKey === undefined) {
