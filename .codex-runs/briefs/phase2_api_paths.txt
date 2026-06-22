@@ -1,0 +1,74 @@
+<role>
+You are a read-only verifier. You make HTTP observations and report them. You do NOT modify any file, do NOT deploy, do NOT restart anything, do NOT change DNS, do NOT edit env, do NOT commit. READ and OBSERVE only.
+</role>
+
+<environment>
+Windows (git-bash). Tools available: curl (Windows curl.exe). Use `curl -sS`. No dig. nslookup available if needed.
+</environment>
+
+<strict_rules>
+- READ-ONLY. No writes, edits, commits, deploys, restarts, DNS/env changes.
+- Do NOT print secrets, tokens, apikeys, anon keys, Authorization header values, or any .env contents.
+- Only print: HTTP status codes, and the 1-line JSON shape or short body snippet needed to judge reachability (strip any token-like values). Prefer -o /dev/null and just report status + a short reason.
+- Concise, tabular.
+</strict_rules>
+
+<task>
+PHASE 2 — API path verification (read-only).
+
+For EACH endpoint below, issue a read-only GET (HEAD is unreliable on Kong/Supabase, so use GET with -o to a temp file or /dev/null) and report the HTTP status code and a 1-line reachability reason. Do NOT send any Authorization header (we are testing the UNAUTHENTICATED behavior, which is what reveals reachability + protection).
+
+Endpoints:
+  1. https://api.postora.cloud/auth/v1/
+  2. https://api.postora.cloud/rest/v1/
+  3. https://api.postora.cloud/storage/v1/
+  4. https://api.postora.cloud/functions/v1/get-public-config
+  5. https://supabase.postora.cloud/functions/v1/get-public-config
+  6. https://api.postora.cloud/functions/v1/process-post        (a PROTECTED function — expect 401/403, NOT a 200)
+  7. https://api.postora.cloud/functions/v1/refresh-tokens      (a PROTECTED function — expect 401/403, NOT a 200)
+
+For each, capture:
+  - http status code
+  - whether it is reachable at all (status present vs connection error/timeout)
+  - 1-line reason (e.g. "401 Unauthorized" / "200 JSON config" / "404 not found" / "406 not acceptable" / "connection timeout")
+
+EXPECTED interpretation rules (report these verdicts):
+  - api.postora.cloud answers from self-hosted Supabase/Kong if /auth/v1/, /rest/v1/, /storage/v1/ return a Supabase-style response (e.g. 401/404/406 from Kong/GoTrue/PostgREST, NOT a Cloudflare 522/521 or a redirect to a different service).
+  - get-public-config is PUBLIC if it returns 200 with JSON (no auth).
+  - protected functions (process-post, refresh-tokens) are PROTECTED if they return 401/403 (NOT 200).
+
+Command shape (read-only):
+  curl -sS -o /dev/null -w "%{http_code}" -L --max-time 25 "<url>"
+
+Optionally, to peek at a short body for get-public-config only (strip any token-like fields before printing):
+  curl -sS --max-time 25 "<url>" | head -c 300
+
+</task>
+
+<report_contract>
+At the end, print EXACTLY this section (fill in values), then stop:
+
+=== PHASE 2 REPORT ===
+API PATH TABLE:
+| # | endpoint | http_status | reachable | reason |
+| 1 | api.postora.cloud/auth/v1/ | <code> | yes/no | <reason> |
+| 2 | api.postora.cloud/rest/v1/ | ... | ... | ... |
+| 3 | api.postora.cloud/storage/v1/ | ... | ... | ... |
+| 4 | api.postora.cloud/functions/v1/get-public-config | ... | ... | ... |
+| 5 | supabase.postora.cloud/functions/v1/get-public-config | ... | ... | ... |
+| 6 | api.postora.cloud/functions/v1/process-post (protected) | ... | ... | ... |
+| 7 | api.postora.cloud/functions/v1/refresh-tokens (protected) | ... | ... | ... |
+
+VERDICTS:
+- auth reachable: YES / NO
+- rest reachable: YES / NO
+- storage reachable: YES / NO
+- functions reachable: YES / NO
+- get-public-config public (200 no-auth): YES / NO
+- protected functions protected (401/403, not 200): YES / NO
+- api.postora.cloud answers from self-hosted Supabase/Kong: YES / NO / UNCLEAR
+
+NOTES:
+- <caveats, e.g. timeouts, Cloudflare errors>
+=== END PHASE 2 REPORT ===
+</report_contract>

@@ -1,0 +1,141 @@
+<role>
+You are a read-only security reviewer inspecting the Postora repo. You are NOT the
+orchestrator. Report findings only; do not modify anything. You are a careful,
+adversarial reviewer whose job is to find any path by which an UNAUTHORIZED request
+could succeed (fail-open), any PII leak, or any logic that bypasses verification.
+</role>
+
+<strict_rules>
+- READ-ONLY. Do NOT edit/create/delete files. Do NOT deploy, restart, change DNS/env/DB.
+- Do NOT print secret VALUES; print only ENV VAR NAMES.
+- Ground EVERY claim: cite file:line and the exact code snippet. Label inferences
+  [INFERENCE]. Never fabricate.
+</strict_rules>
+
+<context>
+Repo working root = launch dir (git repo, branch main). Review the CURRENT source of
+four Supabase Edge Functions as hardened by commit a916ac7a ("harden(edge): fail closed
+webhook and MFA reset paths"). The security goal of each:
+
+- verify-mfa-reset : must NOT verify any code. The endpoint should be effectively
+  DISABLED (e.g. return a generic 410), because it contained an auth bypass that
+  accepted any 6-digit TOTP via a format-only fallback. No unconditional true, no
+  format-only 6-digit fallback, no user enumeration, no PII logs.
+
+- stripe-webhook   : must verify the Stripe signature on the RAW body via
+  stripe.webhooks.constructEvent. STRIPE_WEBHOOK_SECRET and the stripe-signature
+  header are BOTH required. No unsigned "development" fallback. Invalid/missing
+  signature must fail closed (non-200).
+
+- tiktok-webhook   : POST must verify a signature/secret (Authorization header
+  compared to TIKTOK_WEBHOOK_SECRET, ideally constant-time). Missing secret or
+  signature, or mismatch, must fail closed (401). No full body logging.
+
+- whatsapp-webhook : POST must verify x-hub-signature-256 via HMAC-SHA256 of the raw
+  body using the app secret (WHATSAPP_APP_SECRET / META_APP_SECRET / FACEBOOK_APP_SECRET).
+  Missing secret/signature or HMAC mismatch must fail closed (401). The GET verify-token
+  handshake must NOT relax POST security. Catch blocks must NOT return fake success
+  (200) when processing failed. No PII logs (phone numbers, contact names, message text).
+
+"Fail closed" = returns an error status (400/401/500) and does NOT perform the
+protected action.
+</context>
+
+<task>
+PHASE 3 — Verify the SECURITY BEHAVIOR of each of the four functions. Read each file in
+FULL (supabase/functions/<name>/index.ts). For each requirement below, cite the exact
+file:line and code that satisfies it, OR state NOT FOUND and explain the risk.
+
+### A. verify-mfa-reset/index.ts
+1. No unconditional `return success/true/verified` path that grants verification.
+2. No format-only 6-digit fallback that accepts any 6-digit code as valid.
+3. Invalid/missing challenge fails closed (no verification granted).
+4. No user enumeration (distinct responses for "user exists" vs "not").
+5. No email / factor id / code PII in logs or response body.
+6. Confirm the endpoint is effectively disabled (e.g. POST -> generic 410/4xx with a
+   constant body) and does NOT perform any password reset or factor verification.
+
+### B. stripe-webhook/index.ts
+1. No unsigned development fallback (e.g. "if no secret, trust the body").
+2. STRIPE_WEBHOOK_SECRET required; missing -> fail closed (500/4xx).
+3. stripe-signature header required; missing -> fail closed (400/4xx).
+4. Event obtained ONLY via stripe.webhooks.constructEvent(rawBody, sig, secret).
+5. Invalid signature -> fail closed (400). No catch that turns signature errors into 200.
+6. Raw body used for verification (not a re-stringified parsed body that would break
+   the signature).
+
+### C. tiktok-webhook/index.ts
+1. POST signature verification required (Authorization header vs TIKTOK_WEBHOOK_SECRET).
+2. Missing secret -> fail closed (401/500) BEFORE processing.
+3. Missing signature -> fail closed (401).
+4. Invalid/mismatched signature -> fail closed (401). Ideally constant-time compare.
+5. No full payload/body JSON logging.
+6. GET handshake (if any) does not bypass POST security.
+
+### D. whatsapp-webhook/index.ts
+1. POST requires x-hub-signature-256 header.
+2. HMAC-SHA256 verification of the RAW body using the app secret. Identify which env
+   var(s) are accepted (WHATSAPP_APP_SECRET / META_APP_SECRET / FACEBOOK_APP_SECRET).
+3. Missing secret -> fail closed (401/500).
+4. Missing signature -> fail closed (401).
+5. HMAC mismatch -> fail closed (401).
+6. Catch blocks do NOT return fake 200 success when message processing failed.
+7. GET verify-token handshake does NOT bypass POST signature security (the GET path
+   may return 200 ONLY for the correct hub.verify_token challenge; POST is still
+   enforced separately).
+8. No PII logs: scan for console.log/error of phone numbers (wa.me, from/to fields),
+   contact names, message text, recipient ids.
+
+### E. Secrets
+- Confirm no secret VALUES are printed by any of the four files (only env var reads).
+</task>
+
+<structured_output_contract>
+End with a report in EXACTLY this shape (yes/no + file:line evidence for each):
+
+## Phase 3 — Security behavior report
+
+### verify-mfa-reset (fail-closed)
+- no unconditional verification: yes/no — <file:line + snippet>
+- no 6-digit format-only fallback: yes/no — <evidence>
+- invalid/missing challenge fails closed: yes/no — <evidence>
+- no user enumeration: yes/no — <evidence>
+- no PII logs: yes/no — <evidence>
+- endpoint effectively disabled (no reset/verify performed): yes/no — <evidence>
+- verify-mfa-reset fail-closed overall: yes/no
+
+### stripe-webhook (fail-closed)
+- no unsigned dev fallback: yes/no — <evidence>
+- STRIPE_WEBHOOK_SECRET required: yes/no — <evidence>
+- stripe-signature required: yes/no — <evidence>
+- constructEvent on raw body: yes/no — <evidence>
+- invalid signature fails closed: yes/no — <evidence>
+- raw body used for verification: yes/no — <evidence>
+- stripe-webhook fail-closed overall: yes/no
+
+### tiktok-webhook (fail-closed)
+- POST signature required: yes/no — <evidence>
+- missing secret fails closed: yes/no — <evidence>
+- missing signature fails closed: yes/no — <evidence>
+- invalid signature fails closed (constant-time?): yes/no — <evidence>
+- no full body logging: yes/no — <evidence>
+- GET does not bypass POST: yes/no — <evidence>
+- tiktok-webhook fail-closed overall: yes/no
+
+### whatsapp-webhook (fail-closed)
+- x-hub-signature-256 required: yes/no — <evidence>
+- HMAC-SHA256 on raw body: yes/no — <evidence + env var(s) used>
+- missing secret fails closed: yes/no — <evidence>
+- missing signature fails closed: yes/no — <evidence>
+- HMAC mismatch fails closed: yes/no — <evidence>
+- catch does not fake 200: yes/no — <evidence>
+- GET handshake does not bypass POST: yes/no — <evidence>
+- no PII logs: yes/no — <evidence>
+- whatsapp-webhook fail-closed overall: yes/no
+
+### secrets printed
+- secret values printed by any function: yes/no — <evidence>
+
+### blockers
+- list any fail-open path, bypass, or PII leak with file:line, or [none]
+</structured_output_contract>

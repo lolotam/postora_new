@@ -1,0 +1,64 @@
+<task>
+READ-ONLY verification only. Do NOT modify, create, or delete ANY file. Do NOT deploy, do NOT restart
+containers, do NOT change DNS, do NOT edit Dokploy or env. This is a pure diagnosis run.
+
+Goal: verify the routing/identity of the Postora domains so the orchestrator can decide whether
+api.postora.cloud is correctly wired as the main API endpoint.
+
+Perform the following checks against these domains:
+  1. https://api.postora.cloud
+  2. https://supabase.postora.cloud
+  3. https://postora.cloud
+  4. https://old.postora.cloud
+
+For EACH domain collect:
+  - Final resolved IP (use `curl -sI`, `curl -s -o /dev/null -w` for remote_ip / http_code, and
+    `nslookup` / `dig +short` if available; do NOT depend on a single tool — if one is missing, use
+    another and say so).
+  - HTTP status code (follow redirects, but also report each hop briefly).
+  - TLS/certificate validity: does TLS handshake succeed? issuer / CN / SAN names if you can get them
+    (e.g. `curl -vI` and read the cert block, or `openssl s_client -connect host:443 -servername host
+    </dev/null` and parse the cert). Report cert OK = yes/no.
+  - Apparent service identity: what does the server response (headers like `server`, response body,
+    redirect target) tell you it IS? (Supabase Kong gateway? Vercel? Cloudflare? Dokploy/Traefik? the
+    React frontend? the OLD hosted Supabase?)
+
+Additionally, determine whether api.postora.cloud still proxies to the OLD hosted Supabase project
+efruibswazzuuupgyzmf.supabase.co. Heuristics:
+  - Does a request to https://api.postora.cloud/auth/v1/health or /auth/v1/settings return data that
+    matches the self-hosted Kong vs. Supabase SaaS? Compare response headers/body shape.
+  - Does api.postora.cloud's remote_ip differ from efruibswazzuuupgyzmf.supabase.co's resolved IP?
+    (Resolve efruibswazzuuupgyzmf.supabase.co as well and report its IP(s) for comparison.)
+
+Do NOT print any secrets, tokens, passwords, anon/service keys, or Authorization header values.
+Redact anything sensitive as <redacted>.
+</task>
+
+<grounding_rules>
+- Ground EVERY claim in concrete evidence you actually observed (the command you ran and the exact
+  output line that supports the claim).
+- Label anything you infer (not directly observed) as [INFERENCE].
+- If a tool you want is unavailable, say so and use an alternative; do not fabricate output.
+- If a request times out or fails, report the exact failure; do not soften it.
+</grounding_rules>
+
+<action_safety>
+STRICT READ-ONLY. No file writes. No git operations. No state-changing requests (no POST/PUT/DELETE,
+no OAuth, no login). Only idempotent GET / HEAD and DNS/TLS inspection.
+</action_safety>
+
+<structured_output_contract>
+End with a report in exactly this shape:
+
+## Phase 1 — Domain and DNS report
+
+### Domain table
+| domain | resolved IP | HTTP status | cert OK | apparent identity | notes |
+
+### api old-host risk
+api.postora.cloud still points to efruibswazzuuupgyzmf.supabase.co? yes/no/[unclear] — with the
+evidence (the two IPs compared).
+
+### cert / routing issues
+- list any TLS failures, redirect loops, wrong-backend signals, or [none]
+</structured_output_contract>

@@ -1,0 +1,43 @@
+Local `curl` could not execute due sandbox proxy/TLS restrictions. Public HTTP results below came from equivalent read-only Python requests. Supabase function listing failed with insufficient privileges.
+
+## Phase 5 — Live containment report
+
+### deployed function set
+- total deployed functions: unverified — management API denied access
+- names: unavailable
+- four hardened functions present:
+  - verify-mfa-reset: unverified — version=unavailable updated_at=unavailable
+  - stripe-webhook:   unverified — version=unavailable updated_at=unavailable
+  - tiktok-webhook:   unverified — version=unavailable updated_at=unavailable
+  - whatsapp-webhook: unverified — version=unavailable updated_at=unavailable
+- unexpected new functions: unverified
+
+### live aliases
+- api.postora.cloud/functions/v1/get-public-config: 200 — body excerpt: `{"FACEBOOK_APP_ID":"","THREADS_APP_ID":"","INSTAGRAM_APP_ID":"","TIKTOK_CLIENT_KEY":"","PINTEREST_CLIENT_ID":"","LINKEDIN_CLIENT_ID":"","GOOGLE_CLIENT_ID":"","TWITTER_CLIENT_ID":""}`
+- supabase.postora.cloud/functions/v1/get-public-config: 200 — body excerpt: `{"FACEBOOK_APP_ID":"","THREADS_APP_ID":"","INSTAGRAM_APP_ID":"","TIKTOK_CLIENT_KEY":"","PINTEREST_CLIENT_ID":"","LINKEDIN_CLIENT_ID":"","GOOGLE_CLIENT_ID":"","TWITTER_CLIENT_ID":""}`
+
+### protected functions without auth (expect 401)
+- stripe-webhook (no apikey): 401
+- tiktok-webhook (no apikey): 401
+- whatsapp-webhook (no apikey): 401
+- verify-mfa-reset (no apikey): 401
+
+### rollback
+- old.postora.cloud: 200
+- postora.cloud: 200
+
+### postora.cloud runtime API target
+- api.postora.cloud present in HTML: no — count=0
+- supabase.postora.cloud present: no — count=0
+- efruibswazzuuupgyzmf.supabase.co present: no — count=0
+- ehnezmvxpllnxnkpwgob.supabase.co present: yes — count=2
+- self-hosted-curemed.supabase.co present: no — count=0
+- unique preconnect/dns-prefetch/script origins: https://postora.cloud, https://ehnezmvxpllnxnkpwgob.supabase.co, https://static.cloudflareinsights.com
+
+### verdict
+- live deployed set unchanged: no — not verifiable with available management privileges
+- api alias healthy: yes
+- backup alias healthy: yes
+- rollback healthy: yes
+- postora.cloud runtime API target: OLD hosted
+- one-line overall: FAIL — deployed-set containment could not be verified, and the live HTML references the old hosted Supabase origin.

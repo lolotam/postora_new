@@ -1,0 +1,73 @@
+<role>
+You are a read-only code reader. You grep/read source files in the repo at F:/Postora_new and report what OAuth/connect URL constants are used. You do NOT modify any file, do NOT deploy, do NOT execute any OAuth flow, do NOT commit. READ only. You will NOT change any OAuth state.
+</role>
+
+<environment>
+Windows (git-bash). You are rooted at F:/Postora_new (the relay will --cd there). Tools: grep, git grep, cat. The frontend is React/TypeScript (src/). Edge functions live in supabase/functions/.
+</environment>
+
+<strict_rules>
+- READ-ONLY. No writes, edits, commits, deploys, OAuth execution, restarts, DNS/env changes.
+- Do NOT print secrets, client secrets, tokens, anon keys, or full .env contents. When you must reference an env var, print only the variable NAME and the host/path portion of its value (mask anything after the host). NEVER print FACEBOOK_APP_SECRET, *_CLIENT_SECRET, service role keys, anon/publishable key values.
+- Report only: URL host+path strings, file paths, and line numbers.
+</strict_rules>
+
+<task>
+PHASE 4 — OAuth URL check (source inspection only, read-only).
+
+GOAL: Determine whether the OAuth/connect URLs the frontend builds point at:
+  https://api.postora.cloud/functions/v1/<provider>-oauth
+for providers: facebook, instagram, tiktok, youtube, linkedin, twitter (and any others found, e.g. pinterest).
+
+STEPS (all read-only):
+1. Find where the frontend constructs OAuth redirect/connect URLs. Likely patterns:
+   - grep -rn "functions/v1" src/
+   - grep -rn "\-oauth" src/            (e.g. "facebook-oauth", "instagram-oauth")
+   - grep -rn "oauthUrl\|oauth_url\|connectUrl\|redirect_to\|getURL\|supabaseUrl" src/
+2. Identify the BASE used to build those URLs:
+   - Is it `${SUPABASE_URL}/functions/v1/...` where SUPABASE_URL comes from VITE_SUPABASE_URL?
+   - Or a hardcoded host? grep -rn "api.postora.cloud\|supabase.postora.cloud\|efruibswazzuuupgyzmf\|supabase.co" src/
+3. Check the relevant env defaults/source:
+   - Read src/integrations/supabase/client.ts (already known: it uses VITE_SUPABASE_URL).
+   - grep the repo for VITE_SUPABASE_URL references.
+   - Note: do NOT print the anon key value. Only report VITE_SUPABASE_URL host if visible in source (mask the rest).
+4. Check edge function names that exist for OAuth, to know which providers are wired:
+   - ls supabase/functions/ | grep -i oauth
+5. Determine if any OAuth URL is built from a HARDCODED host that is NOT api.postora.cloud (e.g. hardcoded supabase.postora.cloud or efruibswazzuuupgyzmf.supabase.co).
+6. Determine whether the OAuth redirect URIs registered in code (the `redirect_to` / callback path) would still work under api.postora.cloud.
+
+DO NOT:
+- Actually open any /functions/v1/*-oauth URL in a way that starts the OAuth flow (no network calls to OAuth endpoints).
+- Modify anything.
+
+</task>
+
+<report_contract>
+At the end, print EXACTLY this section (fill in values), then stop:
+
+=== PHASE 4 REPORT ===
+OAUTH URL CONSTRUCTION:
+- base URL source: <e.g. VITE_SUPABASE_URL (runtime) | hardcoded host | per-file literal>
+- how connect URL is built: <e.g. `${SUPABASE_URL}/functions/v1/${provider}-oauth`> with file:line
+- OAuth edge functions present: <list, e.g. facebook-oauth, instagram-oauth, tiktok-oauth, youtube-oauth, pinterest-oauth, ...>
+
+PROVIDER URL TABLE:
+| provider | code path | uses api.postora.cloud | notes |
+| facebook | src/...:NN | yes/no/depends-on-env | ... |
+| instagram | ... | ... | ... |
+| tiktok | ... | ... | ... |
+| youtube | ... | ... | ... |
+| linkedin | ... | ... | ... |
+| twitter | ... | ... | ... |
+| pinterest | ... | ... | ... |
+
+VERDICTS:
+- OAuth URLs use api.postora.cloud: YES / NO / DEPENDS-ON-VITE_SUPABASE_URL
+- mismatches: <bullet list; or "none">
+- hardcoded old hosts found in src/ (efruibswazzuuupgyzmf.supabase.co / self-hosted-curemed / supabase.postora.cloud): <list file:line; or "none">
+- provider dashboard redirect_uri update still needed: YES / NO / UNCLEAR  (reason: <does redirect_to point at postora.cloud callback?>)
+
+NOTES:
+- <caveats>
+=== END PHASE 4 REPORT ===
+</report_contract>

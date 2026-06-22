@@ -289,24 +289,68 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const authHeader = req.headers.get("Authorization");
+
+  if (!authHeader || !/^Bearer \S+$/.test(authHeader)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !Deno.env.get("FACEBOOK_APP_ID")) {
+    console.error("Facebook OAuth configuration is incomplete");
+    return new Response(JSON.stringify({ error: "Service configuration error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  let user_id: string;
   try {
-    const body = await req.json();
+    const auth = await authenticateCaller(req, body.user_id);
+    user_id = auth.userId;
+  } catch {
+    console.warn("Facebook OAuth authentication failed");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!body.action) {
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const validActions = ["list_pages", "store_page", "store_account", "store_instagram"];
+  const requiresProviderToken = validActions.includes(body.action);
+  const missingActionField =
+    (requiresProviderToken && !body.provider_token) ||
+    (body.action === "store_page" && !body.page_id) ||
+    (body.action === "store_instagram" && !body.instagram_account_id);
+
+  if (!validActions.includes(body.action) || missingActionField) {
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
     const { action, provider_token, platform, social_profile_id, page_id } = body;
 
     console.log("Facebook OAuth action:", action);
-
-    // Authenticate caller for actions that modify user data
-    let user_id: string | undefined;
-    if (["store_page", "store_account", "store_instagram"].includes(action)) {
-      const auth = await authenticateCaller(req, body.user_id);
-      user_id = auth.userId;
-    } else {
-      user_id = body.user_id; // list_pages doesn't need auth (uses provider_token)
-    }
-
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Supabase credentials not configured");
-    }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -735,7 +779,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error: unknown) {
-    console.error("Facebook OAuth error:", error);
+    console.error("Facebook OAuth request failed:", error);
     return new Response(JSON.stringify({ error: "Authentication failed. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,0 +1,48 @@
+Evidence:
+
+- `git show --stat a916ac7a` → `6 files changed, 253 insertions(+), 351 deletions(-)`.
+- `git show --name-status --format="" a916ac7a` → one added guard and five modified files listed below.
+- Prohibited-path regex against the commit name list → `<NO MATCHES>`.
+- Sanitized added-line secret scan → `TOTAL_SUSPICIOUS_ADDED_LITERALS: 0`.
+- `git diff --name-only a916ac7a^ a916ac7a -- supabase/config.toml supabase/config` → `<NO OUTPUT>`.
+- Guard inspection referenced only `verify-mfa-reset`, `stripe-webhook`, `tiktok-webhook`, and `whatsapp-webhook`.
+- Stripe test inspection contained only `stripe-webhook` tests.
+- Repository-history discrepancy: `git rev-parse a916ac7a^` returned `ce0f495bb11fcea5b4288a2418918b128f2ddb84`, not stated parent `dbf00b98`. The intermediate `ce0f495b` commit changes unrelated frontend files, but those are not part of `git show a916ac7a`.
+
+## Phase 2 — Hardening commit scope report
+
+### changed files (full list)
+- src/lib/__tests__/edgeFailClosedGuards.test.ts  [guard]
+- supabase/functions/stripe-webhook/index.test.ts  [test]
+- supabase/functions/stripe-webhook/index.ts  [production]
+- supabase/functions/tiktok-webhook/index.ts  [production]
+- supabase/functions/verify-mfa-reset/index.ts  [production]
+- supabase/functions/whatsapp-webhook/index.ts  [production]
+
+### production files limited to the four
+- limited to the four: yes
+- extras (if any): none
+
+### test/guard files focused on the four
+- focused: yes
+- unrelated test changes: none
+
+### deployment / infra / ops changes
+- deployment changes: no
+- specific prohibited paths found: none
+  (dokploy/docker/env/migrations/cron/workflows/DNS/IaC)
+
+### secrets
+- placeholder/hardcoded secrets added: no
+- secret ENV VAR names referenced (values NOT printed): FACEBOOK_APP_SECRET, META_APP_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY, TIKTOK_WEBHOOK_SECRET, WHATSAPP_ACCESS_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_WEBHOOK_VERIFY_TOKEN
+- any committed secret VALUE: no
+
+### VERIFY_JWT
+- verify_jwt weakened/disabled: n/a (not in diff)
+
+### verdict
+- scope respected: yes
+- unexpected files: no
+- placeholder secrets: no
+- deployment changes: no
+- one-line overall: PASS — commit scope is limited to the four functions and focused tests/guard; stated parent hash is incorrect.

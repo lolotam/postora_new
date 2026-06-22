@@ -1,0 +1,100 @@
+<role>
+You are a read-only security reviewer inspecting the Postora repo. You are NOT the
+orchestrator. Report findings only; do not modify anything.
+</role>
+
+<strict_rules>
+- READ-ONLY. Do NOT edit/create/delete files. Do NOT deploy, restart, change DNS/env/DB.
+- Do NOT print secret VALUES. If a secret matters, print only its ENV VAR NAME.
+- Ground EVERY claim in concrete evidence (exact command + output line). Label
+  inferences as [INFERENCE]. Never fabricate.
+</strict_rules>
+
+<context>
+Repo working root = launch dir (git repo, branch main). The hardening commit under
+review is:
+
+  a916ac7a  harden(edge): fail closed webhook and MFA reset paths
+
+Its PARENT is dbf00b98. It is a SOURCE-ONLY hardening of four Supabase Edge Functions
+(Deno TS) plus focused test/guard files. The intent of the task that produced it:
+NO deployment, NO infrastructure changes, NO new secrets, NO Dokploy/DNS/env/DB/cron
+changes. Only the four functions' source + their tests/guards may change.
+</context>
+
+<task>
+PHASE 2 — Verify the hardening commit's SCOPE only (not behavior; that is a separate
+phase).
+
+1. Run: git show --stat a916ac7a
+   Run: git show --name-only --format="" a916ac7a
+   Enumerate EVERY file changed (added/modified/deleted/renamed) by the commit.
+
+2. Confirm the changed PRODUCTION files are LIMITED to exactly these four:
+     * supabase/functions/verify-mfa-reset/index.ts
+     * supabase/functions/stripe-webhook/index.ts
+     * supabase/functions/tiktok-webhook/index.ts
+     * supabase/functions/whatsapp-webhook/index.ts
+   Any OTHER production file changed = OUT OF SCOPE. List any extras.
+
+3. Confirm the changed TEST/GUARD files are focused on these four functions only
+   (e.g. supabase/functions/stripe-webhook/index.test.ts, and a source-grep guard
+   under src/lib/__tests__/ that asserts fail-closed patterns for these four).
+   Any unrelated test changes = note them.
+
+4. Confirm NO deployment / infrastructure / ops files changed. Specifically confirm
+   NONE of these appear in the commit (grep the name list):
+     - anything under dokploy/, docker/, .docker/, k8s/, deploy/, scripts/deploy
+     - docker-compose*.yml, Dockerfile*, nginx*.conf, traefik*, Caddyfile
+     - .env, .env.*, *.env (except .env.example which is documentation)
+     - supabase/config/, supabase/migrations/*, supabase/seed.sql
+     - any cron definition (pg_cron SQL, cron schedules, GitHub Actions workflows
+       under .github/workflows that deploy)
+     - DNS/IaC (terraform, pulumi, cloudflare TF)
+
+5. Confirm NO placeholder or hardcoded secrets were ADDED by this commit. Inspect the
+   diff for any newly introduced literal that looks like a key/token/secret (long
+   base64/JWT/hex strings, "Bearer ...", "sk_", "whsec_", etc.). Report the ENV VAR
+   NAME if a secret is referenced, but confirm the VALUE is not committed.
+   Use: git show a916ac7a | grep -nE patterns, and read the four function files.
+
+6. Confirm VERIFY_JWT / verify_jwt config was not weakened or disabled for any
+   function (check supabase/config.toml or per-function config if present in diff).
+</task>
+
+<structured_output_contract>
+End with a report in EXACTLY this shape:
+
+## Phase 2 — Hardening commit scope report
+
+### changed files (full list)
+- <file>  [production|test|guard|other]
+
+### production files limited to the four
+- limited to the four: yes/no
+- extras (if any): <list>
+
+### test/guard files focused on the four
+- focused: yes/no
+- unrelated test changes: <list or none>
+
+### deployment / infra / ops changes
+- deployment changes: yes/no
+- specific prohibited paths found: <list or none>
+  (dokploy/docker/env/migrations/cron/workflows/DNS/IaC)
+
+### secrets
+- placeholder/hardcoded secrets added: yes/no
+- secret ENV VAR names referenced (values NOT printed): <list or none>
+- any committed secret VALUE: yes/no (BLOCKER if yes)
+
+### VERIFY_JWT
+- verify_jwt weakened/disabled: yes/no / n/a (not in diff)
+
+### verdict
+- scope respected: yes/no
+- unexpected files: yes/no
+- placeholder secrets: yes/no
+- deployment changes: yes/no
+- one-line overall: <PASS / FAIL with reason>
+</structured_output_contract>

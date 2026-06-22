@@ -1,0 +1,30 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e22]:
+    - button "Feature Flags 63/66" [ref=e23] [cursor=pointer]:
+      - img
+      - generic [ref=e24]: Feature Flags
+      - generic [ref=e25]: 63/66
+    - button [ref=e26] [cursor=pointer]:
+      - img
+  - generic [ref=e30]:
+    - link "POSTORA logo POSTORA" [ref=e32] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e33]:
+        - img "POSTORA logo" [ref=e35]
+        - generic [ref=e36]: POSTORA
+    - generic [ref=e37]:
+      - generic [ref=e51]:
+        - img [ref=e53]
+        - heading "Check your email" [level=2] [ref=e55]
+        - paragraph [ref=e56]:
+          - text: If an account exists for
+          - strong [ref=e57]: test-nonexistent@example.com
+          - text: ", you'll receive a password reset link shortly."
+      - generic [ref=e58]:
+        - button "Back to sign in" [ref=e59] [cursor=pointer]
+        - paragraph [ref=e60]:
+          - text: Didn't receive the email?
+          - button "Resend" [ref=e61] [cursor=pointer]

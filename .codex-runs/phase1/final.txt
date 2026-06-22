@@ -1,0 +1,47 @@
+## Phase 1 — Frontend API-origin commit report
+
+### commit presence
+- frontend commit ce0f495b present: yes — evidence: `git show --stat --oneline ce0f495b` → `ce0f495b fix(frontend): persist api.postora.cloud origin`
+- required files committed (supabaseStudio.ts, useWhatsAppBusinessProfile.ts, index.html): yes
+  — missing: none
+- additional files (e.g. client.ts): `src/integrations/supabase/client.ts`
+
+### old-host runtime references
+- efruibswazzuuupgyzmf.supabase.co hits: 26 — classifications:
+  - `supabase/migrations/20260419194709_c9296f5e-5a9b-4125-bb45-93f1c29c8d27.sql:13`: [RUNTIME] `net.http_post` to `notify-admin-new-user`
+  - `supabase/migrations/20260129045140_e6e31fd8-03d4-4a4a-953e-916f32dbb5ca.sql:8,21`: [RUNTIME] `net.http_post` to `observability-collector` and `observability-alerts`
+  - `supabase/migrations/20260118004934_68dd457d-4646-47e0-9e12-dd790b0001ae.sql:16,30,44`: [RUNTIME] scheduled `refresh-tokens` URLs
+  - `supabase/migrations/20260116220334_8ce6da74-a987-4c72-ac5e-ec62725fa58b.sql:7`: [RUNTIME] `send-weekly-analytics`
+  - `supabase/migrations/20260116214455_a76009de-d24e-4405-b918-3135f96c01b0.sql:7`: [RUNTIME] `send-token-expiry-notifications`
+  - `supabase/migrations/20260112095728_5151b2bd-4609-4792-a335-3e79b2f02572.sql:14`: [RUNTIME] `refresh-tokens`
+  - `supabase/migrations/20260110212035_25957670-5f2d-4656-98f5-3251bc17618d.sql:8`: [RUNTIME] `process-scheduled-blog-posts`
+  - `supabase/migrations/20260110014141_66fd88e5-ad2f-46ed-bab8-1246b1b6b115.sql:7`: [RUNTIME] `process-scheduled-posts`
+  - `supabase/migrations/20260109092557_5a2fb2b3-c60e-403c-9373-409107bf6ca1.sql:9`: [RUNTIME] `send-expiry-reminders`
+  - `supabase/migrations/20260109000000_update_refresh_schedule.sql:12`: [RUNTIME] `refresh-tokens`
+  - `supabase/migrations/20260106171348_b6172afe-9e38-47e9-8fae-19312ff98d01.sql:16`: [RUNTIME] `refresh-tokens`
+  - `.playwright-mcp/console-2026-06-21T22-46-43-391Z.log:4,5`, `22-49-06-008Z.log:4,5`, `22-55-39-018Z.log:4,5`, `23-22-38-378Z.log:4,5`, `23-49-45-858Z.log:8,9`, `2026-06-22T06-31-22-270Z.log:4,5`: [BUILD-ARTIFACT]
+- ehnezmvxpllnxnkpwgob.supabase.co hits: 0 — classifications: none; evidence: `rg` output `NO_HITS`
+- self-hosted-curemed.supabase.co hits: 145 — classifications:
+  - `src/lib/__tests__/noSupabaseCoHardcode.test.ts:6`: [TEST] forbidden-domain guard
+  - `.playwright-mcp/console-2026-06-21T13-44-37-383Z.log:14-20,24,32-38,42`: [BUILD-ARTIFACT]
+  - `.playwright-mcp/console-2026-06-21T13-46-04-649Z.log:11-17,21,27-33,37,46-52,56,65-71,75,79-85,89,98-104,108,112-118,122,131-137,141,145-151,155,164-170,174,178-184,188,197-203,207,211-217,221,230-236,240,244-249,255,259,263-269,273`: [BUILD-ARTIFACT]
+- Any [RUNTIME] classification = BLOCKER. State clearly: BLOCKER yes. [INFERENCE] These migrations install or invoke HTTP calls containing the old origin; current deployed DB state was not inspected.
+
+### api.postora.cloud / env wiring
+- client.ts reads URL from VITE_SUPABASE_URL: yes — evidence: `src/integrations/supabase/client.ts:6` → `const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;`
+- default fallback is https://api.postora.cloud: no — evidence: `client.ts:9-10` throws when the variable is absent; the URL is only an example in the error message
+- supabaseStudio.ts default: `https://api.postora.cloud` — evidence: `src/lib/supabaseStudio.ts:3-5`
+- useWhatsAppBusinessProfile.ts builds URL from client/env (not hardcoded): yes — evidence: `src/hooks/useWhatsAppBusinessProfile.ts:34` → `` `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-profile` ``; it imports the same client for authentication at lines 2 and 18
+- index.html preconnect/dns-prefetch target(s): `https://api.postora.cloud` — evidence: `index.html:11-12`
+
+### build / lint
+- npm run lint exit code: not run — summary: prohibited by read-only review instructions
+- npm run build exit code: not run — summary: prohibited because it writes `dist/`
+- build clean: no — full build was not run; static `.\node_modules\.bin\tsc.cmd --noEmit --incremental false` exited `0` with no output
+
+### verdict
+- frontend commit present: yes
+- files committed: yes
+- old-host runtime refs (BLOCKER): yes
+- build clean: no
+- one-line overall: FAIL — old-origin runtime URLs remain in SQL migrations, `client.ts` has no `api.postora.cloud` fallback, and the required write-producing gates were intentionally not run.

@@ -1,0 +1,46 @@
+## Phase 3 — Security behavior report
+
+### verify-mfa-reset (fail-closed)
+- no unconditional verification: yes — `supabase/functions/verify-mfa-reset/index.ts:25-29` — `return disabledResponse();`
+- no 6-digit format-only fallback: yes — `supabase/functions/verify-mfa-reset/index.ts:7-11` — only `disabledResponse` exists: `status: 410`
+- invalid/missing challenge fails closed: yes — `supabase/functions/verify-mfa-reset/index.ts:25-29` — every POST returns `disabledResponse()`
+- no user enumeration: yes — `supabase/functions/verify-mfa-reset/index.ts:7-11` — constant body: `{ error: "This endpoint is disabled" }`
+- no PII logs: yes — `supabase/functions/verify-mfa-reset/index.ts:1-30` — no logging calls; response contains only the constant disabled message
+- endpoint effectively disabled (no reset/verify performed): yes — `supabase/functions/verify-mfa-reset/index.ts:18-29` — non-POST returns `405`; POST returns generic `410`; no auth, factor, code, or password operations exist
+- verify-mfa-reset fail-closed overall: yes
+
+### stripe-webhook (fail-closed)
+- no unsigned dev fallback: yes — `supabase/functions/stripe-webhook/index.ts:171-197` — missing configuration/signature and invalid signatures return errors; no body-trust branch exists
+- STRIPE_WEBHOOK_SECRET required: yes — `supabase/functions/stripe-webhook/index.ts:171-174` — `if (!STRIPE_WEBHOOK_SECRET) ... status: 500`
+- stripe-signature required: yes — `supabase/functions/stripe-webhook/index.ts:176-179` — `if (!signature) ... status: 400`
+- constructEvent on raw body: yes — `supabase/functions/stripe-webhook/index.ts:189-193` — `const body = await req.text();` then `stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET)`
+- invalid signature fails closed: yes — `supabase/functions/stripe-webhook/index.ts:191-197` — verification catch returns `{ error: "Invalid signature" }` with `status: 400`
+- raw body used for verification: yes — `supabase/functions/stripe-webhook/index.ts:189-192` — raw `req.text()` is passed directly to `constructEvent`
+- stripe-webhook fail-closed overall: yes
+
+### tiktok-webhook (fail-closed)
+- POST signature required: yes — `supabase/functions/tiktok-webhook/index.ts:49-58` — POST reads `Authorization` and rejects unless it equals `TIKTOK_WEBHOOK_SECRET`
+- missing secret fails closed: yes — `supabase/functions/tiktok-webhook/index.ts:50-57` — `!webhookSecret` returns `401`
+- missing signature fails closed: yes — `supabase/functions/tiktok-webhook/index.ts:51-57` — `!authorization` returns `401`
+- invalid signature fails closed (constant-time?): yes — `supabase/functions/tiktok-webhook/index.ts:9-20,53-57` — `constantTimeEqual` accumulates byte differences; mismatch returns `401`
+- no full body logging: yes — `supabase/functions/tiktok-webhook/index.ts:63-64` — body is parsed, but logging is only `console.log('TikTok webhook event received')`
+- GET does not bypass POST: yes — `supabase/functions/tiktok-webhook/index.ts:33-46,48-58` — GET and POST are separate branches; every POST reaches the authorization check before processing
+- tiktok-webhook fail-closed overall: yes
+
+### whatsapp-webhook (fail-closed)
+- x-hub-signature-256 required: yes — `supabase/functions/whatsapp-webhook/index.ts:73-80` — missing signature returns `401`
+- HMAC-SHA256 on raw body: yes — `supabase/functions/whatsapp-webhook/index.ts:25-40,70-83` — signs `encoder.encode(rawBody)` using HMAC SHA-256; accepted env vars are `WHATSAPP_APP_SECRET`, `META_APP_SECRET`, and `FACEBOOK_APP_SECRET`
+- missing secret fails closed: yes — `supabase/functions/whatsapp-webhook/index.ts:70-80` — `!appSecret` returns `401`
+- missing signature fails closed: yes — `supabase/functions/whatsapp-webhook/index.ts:73-80` — `!signature` returns `401`
+- HMAC mismatch fails closed: yes — `supabase/functions/whatsapp-webhook/index.ts:82-88` — failed `hasValidMetaSignature(...)` returns `401`
+- catch does not fake 200: no — `supabase/functions/whatsapp-webhook/index.ts:444-446` — `processAutoReplies` catches and suppresses failures: `catch { console.error("[whatsapp-webhook] Auto-reply failed"); }`; control returns to the caller and the request subsequently returns success at `295-298`: `status: 200`
+- GET handshake does not bypass POST: yes — `supabase/functions/whatsapp-webhook/index.ts:53-66,68-88` — GET requires the verification-token comparison; POST separately enforces HMAC authentication
+- no PII logs: yes — `supabase/functions/whatsapp-webhook/index.ts:92,171,219,258,300` — log messages contain event state only; no phone number, contact name, message text, or recipient ID is interpolated
+- whatsapp-webhook fail-closed overall: no
+
+### secrets printed
+- secret values printed by any function: no — `supabase/functions/stripe-webhook/index.ts:4-7`, `supabase/functions/tiktok-webhook/index.ts:50-61`, `supabase/functions/whatsapp-webhook/index.ts:58,70-72,94-95,384,515` — secrets are read by environment-variable name; no secret variable is passed to a logging call
+
+### blockers
+- `supabase/functions/whatsapp-webhook/index.ts:444-446,295-298` — auto-reply processing exceptions are swallowed, after which the webhook can return HTTP 200 success. This violates the requirement that processing failures must not produce fake success.
+- `supabase/functions/whatsapp-webhook/index.ts:224-236` — [INFERENCE] external webhook dispatch is intentionally fire-and-forget and its rejection is reduced to a log, so the primary request returns 200 even when that processing step fails.

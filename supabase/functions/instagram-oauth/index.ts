@@ -22,14 +22,67 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const authHeader = req.headers.get("Authorization");
+
+  if (!authHeader || !/^Bearer \S+$/.test(authHeader)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !INSTAGRAM_APP_ID || !INSTAGRAM_APP_SECRET) {
+    console.error("Instagram OAuth configuration is incomplete");
+    return new Response(JSON.stringify({ error: "Service configuration error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  let user_id: string;
   try {
-    const body = await req.json();
+    const auth = await authenticateCaller(req, body.user_id);
+    user_id = auth.userId;
+  } catch {
+    console.warn("Instagram OAuth authentication failed");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!body.action) {
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const validActions = ["authorize", "callback"];
+  const missingActionField =
+    !body.redirect_uri ||
+    (body.action === "callback" && !body.code);
+
+  if (!validActions.includes(body.action) || missingActionField) {
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
     const { action, code, redirect_uri, social_profile_id, return_to } = body;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     if (action === "authorize") {
-      // Authorize action: validate caller identity
-      const { userId: user_id } = await authenticateCaller(req, body.user_id);
       const scopes = "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_manage_insights";
 
       const state = btoa(JSON.stringify({
@@ -53,8 +106,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "callback") {
-      // Validate caller identity for callback
-      const { userId: user_id } = await authenticateCaller(req, body.user_id);
       console.log("Processing Instagram Business Login callback for user:", user_id);
 
       // Step 1: Exchange code for short-lived token
@@ -71,7 +122,6 @@ Deno.serve(async (req) => {
       });
 
       const tokenData = await tokenResponse.json();
-      console.log("Instagram short-lived token response:", JSON.stringify(tokenData).slice(0, 200));
 
       if (tokenData.error_message || tokenData.error) {
         throw new Error(`Instagram OAuth error: ${tokenData.error_message || tokenData.error}`);
@@ -85,7 +135,6 @@ Deno.serve(async (req) => {
         `https://graph.instagram.com/v22.0/access_token?grant_type=ig_exchange_token&client_secret=${INSTAGRAM_APP_SECRET}&access_token=${shortLivedToken}`
       );
       const longLivedData = await longLivedResponse.json();
-      console.log("Instagram long-lived token response:", JSON.stringify(longLivedData).slice(0, 200));
 
       const finalAccessToken = longLivedData.access_token || shortLivedToken;
       const expiresIn = longLivedData.expires_in || 5184000; // 60 days default
@@ -198,11 +247,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    throw new Error(`Unknown action: ${action}`);
-  } catch (error) {
-    console.error("Instagram OAuth error:", error);
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: unknown) {
+    console.error("Instagram OAuth request failed:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Authentication failed. Please try again." }),
+      JSON.stringify({ error: "Authentication failed. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
