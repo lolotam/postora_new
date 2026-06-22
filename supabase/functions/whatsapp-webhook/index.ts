@@ -9,6 +9,40 @@ const corsHeaders = {
 const lastAutoReplyMap = new Map<string, number>();
 const AUTO_REPLY_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
+function constantTimeEqual(left: string, right: string): boolean {
+  const leftBytes = new TextEncoder().encode(left);
+  const rightBytes = new TextEncoder().encode(right);
+  const length = Math.max(leftBytes.length, rightBytes.length);
+  let difference = leftBytes.length ^ rightBytes.length;
+
+  for (let index = 0; index < length; index += 1) {
+    difference |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
+  }
+
+  return difference === 0;
+}
+
+async function hasValidMetaSignature(rawBody: string, signature: string, secret: string): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const digest = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+    const hexDigest = Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+
+    return constantTimeEqual(signature, `sha256=${hexDigest}`);
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -33,9 +67,29 @@ Deno.serve(async (req) => {
 
   // POST: Incoming webhook events from Meta
   if (req.method === "POST") {
+    const appSecret = Deno.env.get("WHATSAPP_APP_SECRET") ||
+      Deno.env.get("META_APP_SECRET") ||
+      Deno.env.get("FACEBOOK_APP_SECRET");
+    const signature = req.headers.get("x-hub-signature-256");
+
+    if (!appSecret || !signature) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const rawBody = await req.text();
+    if (!(await hasValidMetaSignature(rawBody, signature, appSecret))) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     try {
-      const body = await req.json();
-      console.log("[whatsapp-webhook] Received event:", JSON.stringify(body).slice(0, 500));
+      const body = JSON.parse(rawBody);
+      console.log("[whatsapp-webhook] Received verified event");
 
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -114,7 +168,7 @@ Deno.serve(async (req) => {
               .limit(1);
 
             if (!accounts || accounts.length === 0) {
-              console.warn(`[whatsapp-webhook] No account found for phone_number_id: ${phoneNumberId}`);
+              console.warn("[whatsapp-webhook] No matching account found");
               continue;
             }
 
@@ -162,7 +216,7 @@ Deno.serve(async (req) => {
                 onConflict: "user_id,conversation_id",
               });
 
-            console.log(`[whatsapp-webhook] Stored message from ${contactName} (${from}) to account ${account.id}`);
+            console.log("[whatsapp-webhook] Stored inbound message");
 
             // === AUTO-REPLY LOGIC ===
             await processAutoReplies(adminClient, account, conversationId, phoneNumberId, from, messageText);
@@ -179,7 +233,7 @@ Deno.serve(async (req) => {
                 conversation_id: conversationId,
                 phone_number_id: phoneNumberId,
               },
-            }).catch(err => console.error("[whatsapp-webhook] Webhook dispatch error:", err));
+            }).catch(() => console.error("[whatsapp-webhook] Webhook dispatch failed"));
           }
 
           // Process status updates — write back to whatsapp_messages and surface failures
@@ -201,7 +255,7 @@ Deno.serve(async (req) => {
               friendlyError = "Unsupported message type for this recipient.";
             }
 
-            console.log(`[whatsapp-webhook] Status: ${newStatus} for ${wamid} to ${status.recipient_id}${errorCode ? ` (err ${errorCode}: ${friendlyError})` : ""}`);
+            console.log(`[whatsapp-webhook] Received ${newStatus} status update`);
 
             if (!wamid) continue;
 
@@ -242,10 +296,10 @@ Deno.serve(async (req) => {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    } catch (err) {
-      console.error("[whatsapp-webhook] Error processing webhook:", err);
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
+    } catch {
+      console.error("[whatsapp-webhook] Webhook processing failed");
+      return new Response(JSON.stringify({ error: "Webhook processing failed" }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -266,7 +320,7 @@ async function processAutoReplies(
     // Check cooldown
     const lastReply = lastAutoReplyMap.get(conversationId);
     if (lastReply && Date.now() - lastReply < AUTO_REPLY_COOLDOWN_MS) {
-      console.log(`[whatsapp-webhook] Auto-reply cooldown active for ${conversationId}`);
+      console.log("[whatsapp-webhook] Auto-reply cooldown active");
       return;
     }
 
@@ -305,7 +359,7 @@ async function processAutoReplies(
       
       matchedReply = rule.reply_message;
       matchedRuleId = rule.id;
-      console.log(`[whatsapp-webhook] Away rule matched: ${rule.name}`);
+      console.log("[whatsapp-webhook] Away rule matched");
       break;
     }
 
@@ -318,7 +372,7 @@ async function processAutoReplies(
         if (matched) {
           matchedReply = rule.reply_message;
           matchedRuleId = rule.id;
-          console.log(`[whatsapp-webhook] Keyword rule matched: ${rule.name}`);
+          console.log("[whatsapp-webhook] Keyword rule matched");
           break;
         }
       }
@@ -351,7 +405,7 @@ async function processAutoReplies(
     );
 
     const sendData = await sendRes.json();
-    console.log(`[whatsapp-webhook] Auto-reply sent:`, JSON.stringify(sendData).slice(0, 300));
+    console.log("[whatsapp-webhook] Auto-reply request completed");
 
     if (sendRes.ok) {
       // Store outbound auto-reply in whatsapp_messages
@@ -387,8 +441,8 @@ async function processAutoReplies(
         });
       }
     }
-  } catch (err) {
-    console.error("[whatsapp-webhook] Auto-reply error:", err);
+  } catch {
+    console.error("[whatsapp-webhook] Auto-reply failed");
   }
 }
 

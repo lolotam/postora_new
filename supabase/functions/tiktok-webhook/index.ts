@@ -6,22 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function constantTimeEqual(left: string, right: string): boolean {
+  const leftBytes = new TextEncoder().encode(left);
+  const rightBytes = new TextEncoder().encode(right);
+  const length = Math.max(leftBytes.length, rightBytes.length);
+  let difference = leftBytes.length ^ rightBytes.length;
+
+  for (let index = 0; index < length; index += 1) {
+    difference |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
+  }
+
+  return difference === 0;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
   try {
     const method = req.method;
     const url = new URL(req.url);
     
-    console.log(`TikTok Webhook received: ${method} ${url.pathname}`);
-
     // Handle GET request for webhook verification
     if (method === 'GET') {
       const challenge = url.searchParams.get('challenge');
@@ -40,24 +47,34 @@ serve(async (req) => {
 
     // Handle POST request for webhook events
     if (method === 'POST') {
+      const webhookSecret = Deno.env.get('TIKTOK_WEBHOOK_SECRET');
+      const authorization = req.headers.get('Authorization');
+
+      if (!webhookSecret || !authorization || !constantTimeEqual(authorization, webhookSecret)) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
       const body = await req.json();
-      console.log('TikTok webhook event received:', JSON.stringify(body, null, 2));
+      console.log('TikTok webhook event received');
 
       // Process different webhook event types
       const eventType = body.event;
       
       switch (eventType) {
         case 'authorize':
-          console.log('User authorized the app');
           break;
           
         case 'deauthorize':
-          console.log('User deauthorized the app');
           break;
           
         case 'video.publish.complete':
         case 'post.publish.complete':
-          console.log('Video/Post publish completed');
           // Update platform_posts if we have publish_id
           if (body.publish_id) {
             await updatePlatformPostStatus(supabase, body.publish_id, 'success', null, body);
@@ -66,10 +83,8 @@ serve(async (req) => {
           
         case 'video.publish.failed':
         case 'post.publish.failed':
-          console.log('Video/Post publish failed:', body);
           // Extract failure reason
           const failReason = body.fail_reason || body.error?.message || body.error_code || 'Unknown failure';
-          console.log('Failure reason:', failReason);
           
           // Update platform_posts with failure
           if (body.publish_id) {
@@ -78,7 +93,7 @@ serve(async (req) => {
           break;
           
         default:
-          console.log('Unknown event type:', eventType);
+          break;
       }
 
       return new Response(JSON.stringify({ success: true }), {
